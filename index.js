@@ -77,6 +77,10 @@ client.on('ready', async () => {
                 ]
             },
             {
+                name: 'force_ticket',
+                description: 'Forzar el cierre del ticket sin necesidad de reseña'
+            },
+            {
                 name: 'reseñar',
                 description: 'Calificar al Middleman asignado al ticket',
                 options: [
@@ -109,7 +113,7 @@ client.on('ready', async () => {
 
 client.on('interactionCreate', async (interaction) => {
     if (interaction.isChatInputCommand()) {
-        const { commandName, options, channel, user, member } = interaction;
+        const { commandName, options, channel, user, member, guild } = interaction;
 
         // /PANEL_MIDDLEMAN
         if (commandName === 'panel_middleman') {
@@ -189,6 +193,50 @@ client.on('interactionCreate', async (interaction) => {
                 console.error(err);
                 return interaction.reply({ content: '❌ Error al intentar dar permisos al usuario.', ephemeral: true });
             }
+        }
+
+        // /FORCE_TICKET
+        if (commandName === 'force_ticket') {
+            const datos = ticketsBD.get(channel.id);
+            const esCanalTicket = channel.name.startsWith('ticket-') || !!datos;
+
+            if (!esCanalTicket) {
+                return interaction.reply({ content: '❌ Este comando solo se puede usar dentro de un canal de ticket.', ephemeral: true });
+            }
+
+            const tienePermisoStaff = ROLES_STAFF_IDS.some(rolId => member.roles.cache.has(rolId)) || member.permissions.has(PermissionFlagsBits.Administrator);
+            if (!tienePermisoStaff) {
+                return interaction.reply({ content: '❌ Solo el Staff o Administradores pueden forzar el cierre de un ticket.', ephemeral: true });
+            }
+
+            await interaction.reply({ content: '⚠️ **Cierre forzado iniciado.** Guardando log y borrando canal en 5 segundos...' });
+
+            const creadorMencion = datos?.creador ? `<@${datos.creador.id}>` : 'Desconocido';
+            const atendidoMencion = datos?.reclamadoPor ? `<@${datos.reclamadoPor.id}>` : 'Sin reclamar';
+            const fechaApertura = datos?.fechaApertura ? formatearFecha(datos.fechaApertura) : 'Desconocida';
+
+            const embedLog = new EmbedBuilder()
+                .setTitle(`📋 Log - ${channel.name} (Cierre Forzado)`)
+                .setColor(0xE74C3C)
+                .addFields(
+                    { name: '👤 Creador', value: creadorMencion, inline: true },
+                    { name: '📌 Atendido por', value: atendidoMencion, inline: true },
+                    { name: '🔒 Cerrado por', value: `<@${user.id}> (Forzado)`, inline: true },
+                    { name: '🕒 Creado', value: fechaApertura, inline: false },
+                    { name: '⏰ Cerrado', value: formatearFecha(new Date()), inline: false }
+                )
+                .setFooter({ text: 'Ticket cerrado mediante /force_ticket' })
+                .setTimestamp();
+
+            const canalLogs = guild.channels.cache.get(CANAL_LOGS_ID);
+            if (canalLogs) await canalLogs.send({ embeds: [embedLog] });
+
+            setTimeout(async () => {
+                ticketsBD.delete(channel.id);
+                await channel.delete().catch(() => {});
+            }, 5000);
+
+            return;
         }
 
         // /PERDONAR
@@ -293,14 +341,12 @@ client.on('interactionCreate', async (interaction) => {
 
             const listaUsuarios = [];
 
-            // Calcular promedio y cantidad para cada usuario reseñado
             resenasBD.forEach((lista, usuarioId) => {
                 const total = lista.length;
                 const promedio = lista.reduce((acc, r) => acc + r.estrellas, 0) / total;
                 listaUsuarios.push({ usuarioId, promedio, total });
             });
 
-            // Ordenar por mayor promedio y en empate por mayor cantidad de reseñas
             listaUsuarios.sort((a, b) => {
                 if (b.promedio !== a.promedio) return b.promedio - a.promedio;
                 return b.total - a.total;
@@ -392,7 +438,7 @@ client.on('interactionCreate', async (interaction) => {
             }
         }
 
-        // CREAR TICKET DE SOPORTE GENERAL (soporte, pregunta, ayuda, reportar)
+        // CREAR TICKET DE SOPORTE GENERAL
         if (['ticket_soporte', 'ticket_pregunta', 'ticket_ayuda', 'ticket_reportar'].includes(customId)) {
             await interaction.deferReply({ ephemeral: true });
 
