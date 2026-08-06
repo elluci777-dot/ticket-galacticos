@@ -93,6 +93,10 @@ client.on('ready', async () => {
                 ]
             },
             {
+                name: 'repuntuaciones',
+                description: 'Muestra el Top 10 de mejores calificaciones y puntuaciones de los miembros'
+            },
+            {
                 name: 'perdonar',
                 description: 'Ruleta de perdón 50/50'
             }
@@ -194,7 +198,7 @@ client.on('interactionCreate', async (interaction) => {
             const embedRuleta = new EmbedBuilder()
                 .setTitle('🎰 Ruleta del Perdón')
                 .setColor(esPerdonado ? 0x2ECC71 : 0xE74C3C)
-                .setDescription(`**Juzgando a:** ${user}\n\n**Resultado:** ${esPerdonado ? 'PERDONADO 🎉' : 'NO PERDONADO 🔴'}`);
+                .setDescription(`**Juzgando a:** ${user}\n\n**Resultado:** ${esPerdonado ? 'PERDONADO 🟢' : 'NO PERDONADO 🔴'}`);
 
             return interaction.reply({ embeds: [embedRuleta] });
         }
@@ -279,6 +283,48 @@ client.on('interactionCreate', async (interaction) => {
                 .setTimestamp();
 
             return interaction.reply({ embeds: [embedHistorial] });
+        }
+
+        // /REPUNTUACIONES
+        if (commandName === 'repuntuaciones') {
+            if (resenasBD.size === 0) {
+                return interaction.reply({ content: 'ℹ️ Aún no hay reseñas registradas en la base de datos.' });
+            }
+
+            const listaUsuarios = [];
+
+            // Calcular promedio y cantidad para cada usuario reseñado
+            resenasBD.forEach((lista, usuarioId) => {
+                const total = lista.length;
+                const promedio = lista.reduce((acc, r) => acc + r.estrellas, 0) / total;
+                listaUsuarios.push({ usuarioId, promedio, total });
+            });
+
+            // Ordenar por mayor promedio y en empate por mayor cantidad de reseñas
+            listaUsuarios.sort((a, b) => {
+                if (b.promedio !== a.promedio) return b.promedio - a.promedio;
+                return b.total - a.total;
+            });
+
+            const medallas = ['🥇', '🥈', '🥉'];
+            let descripcionTop = '';
+
+            const top10 = listaUsuarios.slice(0, 10);
+
+            top10.forEach((item, index) => {
+                const emojiMedalla = medallas[index] || '🎖️';
+                const promFormat = item.promedio.toFixed(1);
+                descripcionTop += `${emojiMedalla} **#${index + 1}** <@${item.usuarioId}>\n> **Calificación:** ${promFormat} / 5.0 ⭐ | **Reseñas:** ${item.total}\n\n`;
+            });
+
+            const embedTop = new EmbedBuilder()
+                .setTitle('🏆 Top 10 Mejores Reseñados y Puntuaciones')
+                .setColor(0xF1C40F)
+                .setDescription(descripcionTop)
+                .setFooter({ text: 'Tabla de Clasificación de Middlemans y Staff' })
+                .setTimestamp();
+
+            return interaction.reply({ embeds: [embedTop] });
         }
     }
 
