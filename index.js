@@ -73,7 +73,12 @@ client.on('ready', async () => {
                 description: 'Añadir al comprador/vendedor al ticket (Solo Middlemans en adelante)',
                 default_member_permissions: PermissionFlagsBits.ManageChannels.toString(),
                 options: [
-                    { name: 'usuario', description: 'Usuario a añadir al ticket', type: ApplicationCommandOptionType.User, required: true }
+                    {
+                        name: 'usuario',
+                        description: 'Usuario a añadir al ticket',
+                        type: ApplicationCommandOptionType.User,
+                        required: true
+                    }
                 ]
             },
             {
@@ -84,16 +89,38 @@ client.on('ready', async () => {
                 name: 'reseñar',
                 description: 'Calificar al Middleman asignado al ticket',
                 options: [
-                    { name: 'usuario', description: 'Selecciona al Middleman asignado', type: ApplicationCommandOptionType.User, required: true },
-                    { name: 'estrellas', description: 'Calificación (1 a 5)', type: ApplicationCommandOptionType.Integer, required: true, min_value: 1, max_value: 5 },
-                    { name: 'comentario', description: 'Comentario u opinión', type: ApplicationCommandOptionType.String, required: false }
+                    {
+                        name: 'usuario',
+                        description: 'Selecciona al Middleman asignado',
+                        type: ApplicationCommandOptionType.User,
+                        required: true
+                    },
+                    {
+                        name: 'estrellas',
+                        description: 'Calificación (1 a 5)',
+                        type: ApplicationCommandOptionType.Integer,
+                        required: true,
+                        min_value: 1,
+                        max_value: 5
+                    },
+                    {
+                        name: 'comentario',
+                        description: 'Comentario u opinión',
+                        type: ApplicationCommandOptionType.String,
+                        required: false
+                    }
                 ]
             },
             {
                 name: 'reseñas',
                 description: 'Ver todas las reseñas de un usuario (Tickets y Subastas)',
                 options: [
-                    { name: 'usuario', description: 'Usuario a consultar', type: ApplicationCommandOptionType.User, required: true }
+                    {
+                        name: 'usuario',
+                        description: 'Usuario a consultar',
+                        type: ApplicationCommandOptionType.User,
+                        required: true
+                    }
                 ]
             },
             {
@@ -105,6 +132,7 @@ client.on('ready', async () => {
                 description: 'Ruleta de perdón 50/50'
             }
         ]);
+
         console.log('🤖 Comandos Slash registrados correctamente.');
     } catch (err) {
         console.error('Error al registrar comandos:', err);
@@ -112,13 +140,24 @@ client.on('ready', async () => {
 });
 
 client.on('interactionCreate', async (interaction) => {
+
+    // ============================================================
+    // COMANDOS SLASH
+    // ============================================================
+
     if (interaction.isChatInputCommand()) {
         const { commandName, options, channel, user, member, guild } = interaction;
 
+        // ========================================================
         // /PANEL_MIDDLEMAN
+        // ========================================================
+
         if (commandName === 'panel_middleman') {
             if (!member.permissions.has(PermissionFlagsBits.Administrator)) {
-                return interaction.reply({ content: '❌ Solo administradores.', ephemeral: true });
+                return interaction.reply({
+                    content: '❌ Solo administradores.',
+                    ephemeral: true
+                });
             }
 
             const embedPanel = new EmbedBuilder()
@@ -132,17 +171,34 @@ client.on('interactionCreate', async (interaction) => {
                 .setTimestamp();
 
             const filaBoton = new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId('ticket_middleman').setLabel('middleman').setEmoji('🎟️').setStyle(BTN_STYLE.SUCCESS)
+                new ButtonBuilder()
+                    .setCustomId('ticket_middleman')
+                    .setLabel('middleman')
+                    .setEmoji('🎟️')
+                    .setStyle(BTN_STYLE.SUCCESS)
             );
 
-            await interaction.channel.send({ embeds: [embedPanel], components: [filaBoton] });
-            return interaction.reply({ content: '✅ Panel enviado correctamente.', ephemeral: true });
+            await interaction.channel.send({
+                embeds: [embedPanel],
+                components: [filaBoton]
+            });
+
+            return interaction.reply({
+                content: '✅ Panel enviado correctamente.',
+                ephemeral: true
+            });
         }
 
+        // ========================================================
         // /PANEL_SOPORTE
+        // ========================================================
+
         if (commandName === 'panel_soporte') {
             if (!member.permissions.has(PermissionFlagsBits.Administrator)) {
-                return interaction.reply({ content: '❌ Solo administradores.', ephemeral: true });
+                return interaction.reply({
+                    content: '❌ Solo administradores.',
+                    ephemeral: true
+                });
             }
 
             const embedSoporte = new EmbedBuilder()
@@ -157,26 +213,67 @@ client.on('interactionCreate', async (interaction) => {
                 .setTimestamp();
 
             const filaBotonesSoporte = new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId('ticket_soporte').setLabel('soporte').setEmoji('🎟️').setStyle(BTN_STYLE.DANGER),
-                new ButtonBuilder().setCustomId('ticket_pregunta').setLabel('pregunta').setEmoji('👀').setStyle(BTN_STYLE.PRIMARY),
-                new ButtonBuilder().setCustomId('ticket_ayuda').setLabel('ayuda').setEmoji('⚠️').setStyle(BTN_STYLE.SUCCESS),
-                new ButtonBuilder().setCustomId('ticket_reportar').setLabel('reportar').setEmoji('❌').setStyle(BTN_STYLE.DANGER)
+                new ButtonBuilder()
+                    .setCustomId('ticket_soporte')
+                    .setLabel('soporte')
+                    .setEmoji('🎟️')
+                    .setStyle(BTN_STYLE.DANGER),
+
+                new ButtonBuilder()
+                    .setCustomId('ticket_pregunta')
+                    .setLabel('pregunta')
+                    .setEmoji('👀')
+                    .setStyle(BTN_STYLE.PRIMARY),
+
+                new ButtonBuilder()
+                    .setCustomId('ticket_ayuda')
+                    .setLabel('ayuda')
+                    .setEmoji('⚠️')
+                    .setStyle(BTN_STYLE.SUCCESS),
+
+                new ButtonBuilder()
+                    .setCustomId('ticket_reportar')
+                    .setLabel('reportar')
+                    .setEmoji('❌')
+                    .setStyle(BTN_STYLE.DANGER)
             );
 
-            await interaction.channel.send({ embeds: [embedSoporte], components: [filaBotonesSoporte] });
-            return interaction.reply({ content: '✅ Panel de soporte enviado correctamente.', ephemeral: true });
+            await interaction.channel.send({
+                embeds: [embedSoporte],
+                components: [filaBotonesSoporte]
+            });
+
+            return interaction.reply({
+                content: '✅ Panel de soporte enviado correctamente.',
+                ephemeral: true
+            });
         }
 
+        // ========================================================
         // /AÑADIR
+        // ========================================================
+
         if (commandName === 'añadir') {
-            const esTicket = channel.name.startsWith('ticket-') || ticketsBD.has(channel.id);
+            const esTicket =
+                channel.name.startsWith('ticket-') ||
+                ticketsBD.has(channel.id);
+
             if (!esTicket) {
-                return interaction.reply({ content: '❌ Este comando solo funciona dentro de un ticket activo.', ephemeral: true });
+                return interaction.reply({
+                    content: '❌ Este comando solo funciona dentro de un ticket activo.',
+                    ephemeral: true
+                });
             }
 
-            const esMiddlemanOSuperior = ROLES_STAFF_IDS.some(rolId => member.roles.cache.has(rolId)) || member.permissions.has(PermissionFlagsBits.Administrator);
+            const esMiddlemanOSuperior =
+                ROLES_STAFF_IDS.some(rolId => member.roles.cache.has(rolId)) ||
+                member.permissions.has(PermissionFlagsBits.Administrator);
+
             if (!esMiddlemanOSuperior) {
-                return interaction.reply({ content: '❌ Solo un **Middleman** o rol superior puede añadir usuarios al ticket.', ephemeral: true });
+                return interaction.reply({
+                    content: '❌ Solo un **Middleman** o rol superior puede añadir usuarios al ticket.',
+                    ephemeral: true
+                });
             }
 
             const usuarioAAñadir = options.getUser('usuario');
@@ -188,48 +285,106 @@ client.on('interactionCreate', async (interaction) => {
                     AttachFiles: true
                 });
 
-                return interaction.reply({ content: `✅ ${usuarioAAñadir} ha sido añadido al ticket.` });
+                return interaction.reply({
+                    content: `✅ ${usuarioAAñadir} ha sido añadido al ticket.`
+                });
+
             } catch (err) {
                 console.error(err);
-                return interaction.reply({ content: '❌ Error al intentar dar permisos al usuario.', ephemeral: true });
+
+                return interaction.reply({
+                    content: '❌ Error al intentar dar permisos al usuario.',
+                    ephemeral: true
+                });
             }
         }
 
+        // ========================================================
         // /FORCE_TICKET
+        // ========================================================
+
         if (commandName === 'force_ticket') {
             const datos = ticketsBD.get(channel.id);
-            const esCanalTicket = channel.name.startsWith('ticket-') || !!datos;
+            const esCanalTicket =
+                channel.name.startsWith('ticket-') ||
+                !!datos;
 
             if (!esCanalTicket) {
-                return interaction.reply({ content: '❌ Este comando solo se puede usar dentro de un canal de ticket.', ephemeral: true });
+                return interaction.reply({
+                    content: '❌ Este comando solo se puede usar dentro de un canal de ticket.',
+                    ephemeral: true
+                });
             }
 
-            const tienePermisoStaff = ROLES_STAFF_IDS.some(rolId => member.roles.cache.has(rolId)) || member.permissions.has(PermissionFlagsBits.Administrator);
+            const tienePermisoStaff =
+                ROLES_STAFF_IDS.some(rolId => member.roles.cache.has(rolId)) ||
+                member.permissions.has(PermissionFlagsBits.Administrator);
+
             if (!tienePermisoStaff) {
-                return interaction.reply({ content: '❌ Solo el Staff o Administradores pueden forzar el cierre de un ticket.', ephemeral: true });
+                return interaction.reply({
+                    content: '❌ Solo el Staff o Administradores pueden forzar el cierre de un ticket.',
+                    ephemeral: true
+                });
             }
 
-            await interaction.reply({ content: '⚠️ **Cierre forzado iniciado.** Guardando log y borrando canal en 5 segundos...' });
+            await interaction.reply({
+                content: '⚠️ **Cierre forzado iniciado.** Guardando log y borrando canal en 5 segundos...'
+            });
 
-            const creadorMencion = datos?.creador ? `<@${datos.creador.id}>` : 'Desconocido';
-            const atendidoMencion = datos?.reclamadoPor ? `<@${datos.reclamadoPor.id}>` : 'Sin reclamar';
-            const fechaApertura = datos?.fechaApertura ? formatearFecha(datos.fechaApertura) : 'Desconocida';
+            const creadorMencion = datos?.creador
+                ? `<@${datos.creador.id}>`
+                : 'Desconocido';
+
+            const atendidoMencion = datos?.reclamadoPor
+                ? `<@${datos.reclamadoPor.id}>`
+                : 'Sin reclamar';
+
+            const fechaApertura = datos?.fechaApertura
+                ? formatearFecha(datos.fechaApertura)
+                : 'Desconocida';
 
             const embedLog = new EmbedBuilder()
                 .setTitle(`📋 Log - ${channel.name} (Cierre Forzado)`)
                 .setColor(0xE74C3C)
                 .addFields(
-                    { name: '👤 Creador', value: creadorMencion, inline: true },
-                    { name: '📌 Atendido por', value: atendidoMencion, inline: true },
-                    { name: '🔒 Cerrado por', value: `<@${user.id}> (Forzado)`, inline: true },
-                    { name: '🕒 Creado', value: fechaApertura, inline: false },
-                    { name: '⏰ Cerrado', value: formatearFecha(new Date()), inline: false }
+                    {
+                        name: '👤 Creador',
+                        value: creadorMencion,
+                        inline: true
+                    },
+                    {
+                        name: '📌 Atendido por',
+                        value: atendidoMencion,
+                        inline: true
+                    },
+                    {
+                        name: '🔒 Cerrado por',
+                        value: `<@${user.id}> (Forzado)`,
+                        inline: true
+                    },
+                    {
+                        name: '🕒 Creado',
+                        value: fechaApertura,
+                        inline: false
+                    },
+                    {
+                        name: '⏰ Cerrado',
+                        value: formatearFecha(new Date()),
+                        inline: false
+                    }
                 )
-                .setFooter({ text: 'Ticket cerrado mediante /force_ticket' })
+                .setFooter({
+                    text: 'Ticket cerrado mediante /force_ticket'
+                })
                 .setTimestamp();
 
             const canalLogs = guild.channels.cache.get(CANAL_LOGS_ID);
-            if (canalLogs) await canalLogs.send({ embeds: [embedLog] });
+
+            if (canalLogs) {
+                await canalLogs.send({
+                    embeds: [embedLog]
+                });
+            }
 
             setTimeout(async () => {
                 ticketsBD.delete(channel.id);
@@ -239,116 +394,197 @@ client.on('interactionCreate', async (interaction) => {
             return;
         }
 
+        // ========================================================
         // /PERDONAR
+        // ========================================================
+
         if (commandName === 'perdonar') {
             const esPerdonado = Math.random() < 0.5;
 
             const embedRuleta = new EmbedBuilder()
                 .setTitle('🎰 Ruleta del Perdón')
                 .setColor(esPerdonado ? 0x2ECC71 : 0xE74C3C)
-                .setDescription(`**Juzgando a:** ${user}\n\n**Resultado:** ${esPerdonado ? 'PERDONADO 🟢' : 'NO PERDONADO 🔴'}`);
+                .setDescription(
+                    `**Juzgando a:** ${user}\n\n**Resultado:** ${
+                        esPerdonado
+                            ? 'PERDONADO 🟢'
+                            : 'NO PERDONADO 🔴'
+                    }`
+                );
 
-            return interaction.reply({ embeds: [embedRuleta] });
+            return interaction.reply({
+                embeds: [embedRuleta]
+            });
         }
 
+        // ========================================================
         // /RESEÑAR
+        // ========================================================
+
         if (commandName === 'reseñar') {
             const datos = ticketsBD.get(channel.id);
-            const esCanalTicket = channel.name.startsWith('ticket-middleman-') || !!datos;
-            
+
+            const esCanalTicket =
+                channel.name.startsWith('ticket-middleman-') ||
+                !!datos;
+
             if (!esCanalTicket) {
-                return interaction.reply({ content: '❌ Este comando solo se puede utilizar dentro de un ticket activo de Middleman.', ephemeral: true });
+                return interaction.reply({
+                    content: '❌ Este comando solo se puede utilizar dentro de un ticket activo de Middleman.',
+                    ephemeral: true
+                });
             }
 
             let objetivo = options.getUser('usuario');
             let origen = '🎟️ Ticket';
 
-            if (datos && datos.reclamadoPor && objetivo.id !== datos.reclamadoPor.id) {
-                return interaction.reply({ 
-                    content: `❌ Solo puedes reseñar al Middleman asignado: <@${datos.reclamadoPor.id}>.`, 
-                    ephemeral: true 
+            if (
+                datos &&
+                datos.reclamadoPor &&
+                objetivo.id !== datos.reclamadoPor.id
+            ) {
+                return interaction.reply({
+                    content: `❌ Solo puedes reseñar al Middleman asignado: <@${datos.reclamadoPor.id}>.`,
+                    ephemeral: true
                 });
             }
 
             if (datos && user.id !== datos.creador.id) {
-                return interaction.reply({ content: '❌ Solo el creador del ticket puede hacer la reseña.', ephemeral: true });
+                return interaction.reply({
+                    content: '❌ Solo el creador del ticket puede hacer la reseña.',
+                    ephemeral: true
+                });
             }
 
             if (datos && datos.resenaHecha) {
-                return interaction.reply({ content: '❌ Ya has registrado tu reseña para este ticket.', ephemeral: true });
+                return interaction.reply({
+                    content: '❌ Ya has registrado tu reseña para este ticket.',
+                    ephemeral: true
+                });
             }
 
             const estrellas = options.getInteger('estrellas');
             const comentario = options.getString('comentario') || 'Sin comentario.';
 
-            if (!resenasBD.has(objetivo.id)) resenasBD.set(objetivo.id, []);
-            resenasBD.get(objetivo.id).push({ 
-                autorId: user.id, 
-                estrellas, 
-                comentario, 
-                tipoOrigen: origen 
+            if (!resenasBD.has(objetivo.id)) {
+                resenasBD.set(objetivo.id, []);
+            }
+
+            resenasBD.get(objetivo.id).push({
+                autorId: user.id,
+                estrellas,
+                comentario,
+                tipoOrigen: origen
             });
 
-            if (datos) datos.resenaHecha = true;
+            if (datos) {
+                datos.resenaHecha = true;
+            }
 
             const estrellasStr = '⭐'.repeat(estrellas);
+
             const embedResena = new EmbedBuilder()
                 .setTitle(`⭐ Reseña Guardada (${origen})`)
                 .setColor(0xF1C40F)
-                .setDescription(`**Cliente:** ${user}\n**Middleman Reseñado:** ${objetivo}\n**Calificación:** ${estrellasStr} (${estrellas}/5)\n**Comentario:** ${comentario}`)
+                .setDescription(
+                    `**Cliente:** ${user}\n` +
+                    `**Middleman Reseñado:** ${objetivo}\n` +
+                    `**Calificación:** ${estrellasStr} (${estrellas}/5)\n` +
+                    `**Comentario:** ${comentario}`
+                )
                 .setTimestamp();
 
-            return interaction.reply({ embeds: [embedResena] });
+            return interaction.reply({
+                embeds: [embedResena]
+            });
         }
 
+        // ========================================================
         // /RESEÑAS
+        // ========================================================
+
         if (commandName === 'reseñas') {
             if (channel.id !== CANAL_RESENAS_ID) {
-                return interaction.reply({ content: `❌ Usa este comando únicamente en <#${CANAL_RESENAS_ID}>.`, ephemeral: true });
+                return interaction.reply({
+                    content: `❌ Usa este comando únicamente en <#${CANAL_RESENAS_ID}>.`,
+                    ephemeral: true
+                });
             }
 
             const usuario = options.getUser('usuario');
             const lista = resenasBD.get(usuario.id) || [];
 
             if (lista.length === 0) {
-                return interaction.reply({ content: `ℹ️ El usuario ${usuario} aún no tiene reseñas.` });
+                return interaction.reply({
+                    content: `ℹ️ El usuario ${usuario} aún no tiene reseñas.`
+                });
             }
 
-            const promedio = (lista.reduce((acc, r) => acc + r.estrellas, 0) / lista.length).toFixed(1);
+            const promedio = (
+                lista.reduce((acc, r) => acc + r.estrellas, 0) /
+                lista.length
+            ).toFixed(1);
+
             let texto = '';
 
             lista.slice(-10).forEach((r, i) => {
                 const tagOrigen = r.tipoOrigen || '⭐ General';
-                texto += `**${i + 1}.** [${tagOrigen}] Por <@${r.autorId}> - ${'⭐'.repeat(r.estrellas)}\n> *${r.comentario}*\n\n`;
+
+                texto +=
+                    `**${i + 1}.** [${tagOrigen}] Por <@${r.autorId}> - ${'⭐'.repeat(r.estrellas)}\n` +
+                    `> *${r.comentario}*\n\n`;
             });
 
             const embedHistorial = new EmbedBuilder()
                 .setTitle(`⭐ Historial Global de Reseñas - ${usuario.username}`)
                 .setColor(0xF1C40F)
                 .setThumbnail(usuario.displayAvatarURL({ dynamic: true }))
-                .setDescription(`**Promedio Global:** ${promedio} / 5.0 ⭐\n**Total de Reseñas:** ${lista.length}\n\n${texto}`)
-                .setFooter({ text: 'Reseñas consolidadas de Tickets y Subastas' })
+                .setDescription(
+                    `**Promedio Global:** ${promedio} / 5.0 ⭐\n` +
+                    `**Total de Reseñas:** ${lista.length}\n\n${texto}`
+                )
+                .setFooter({
+                    text: 'Reseñas consolidadas de Tickets y Subastas'
+                })
                 .setTimestamp();
 
-            return interaction.reply({ embeds: [embedHistorial] });
+            return interaction.reply({
+                embeds: [embedHistorial]
+            });
         }
 
+        // ========================================================
         // /REPUNTUACIONES
+        // ========================================================
+
         if (commandName === 'repuntuaciones') {
             if (resenasBD.size === 0) {
-                return interaction.reply({ content: 'ℹ️ Aún no hay reseñas registradas en la base de datos.' });
+                return interaction.reply({
+                    content: 'ℹ️ Aún no hay reseñas registradas en la base de datos.'
+                });
             }
 
             const listaUsuarios = [];
 
             resenasBD.forEach((lista, usuarioId) => {
                 const total = lista.length;
-                const promedio = lista.reduce((acc, r) => acc + r.estrellas, 0) / total;
-                listaUsuarios.push({ usuarioId, promedio, total });
+
+                const promedio =
+                    lista.reduce((acc, r) => acc + r.estrellas, 0) /
+                    total;
+
+                listaUsuarios.push({
+                    usuarioId,
+                    promedio,
+                    total
+                });
             });
 
             listaUsuarios.sort((a, b) => {
-                if (b.promedio !== a.promedio) return b.promedio - a.promedio;
+                if (b.promedio !== a.promedio) {
+                    return b.promedio - a.promedio;
+                }
+
                 return b.total - a.total;
             });
 
@@ -360,38 +596,69 @@ client.on('interactionCreate', async (interaction) => {
             top10.forEach((item, index) => {
                 const emojiMedalla = medallas[index] || '🎖️';
                 const promFormat = item.promedio.toFixed(1);
-                descripcionTop += `${emojiMedalla} **#${index + 1}** <@${item.usuarioId}>\n> **Calificación:** ${promFormat} / 5.0 ⭐ | **Reseñas:** ${item.total}\n\n`;
+
+                descripcionTop +=
+                    `${emojiMedalla} **#${index + 1}** <@${item.usuarioId}>\n` +
+                    `> **Calificación:** ${promFormat} / 5.0 ⭐ | **Reseñas:** ${item.total}\n\n`;
             });
 
             const embedTop = new EmbedBuilder()
                 .setTitle('🏆 Top 10 Mejores Reseñados y Puntuaciones')
                 .setColor(0xF1C40F)
                 .setDescription(descripcionTop)
-                .setFooter({ text: 'Tabla de Clasificación de Middlemans y Staff' })
+                .setFooter({
+                    text: 'Tabla de Clasificación de Middlemans y Staff'
+                })
                 .setTimestamp();
 
-            return interaction.reply({ embeds: [embedTop] });
+            return interaction.reply({
+                embeds: [embedTop]
+            });
         }
     }
 
-    // --- MANEJO DE BOTONES ---
+    // ============================================================
+    // MANEJO DE BOTONES
+    // ============================================================
+
     if (interaction.isButton()) {
         const { customId, guild, user, channel } = interaction;
 
+        // ========================================================
         // CREAR TICKET MIDDLEMAN
+        // ========================================================
+
         if (customId === 'ticket_middleman') {
-            await interaction.deferReply({ ephemeral: true });
-            const nombreCanal = `ticket-middleman-${contadorMiddleman++}`;
+            await interaction.deferReply({
+                ephemeral: true
+            });
+
+            const nombreCanal =
+                `ticket-middleman-${contadorMiddleman++}`;
 
             const permissionOverwrites = [
-                { id: guild.roles.everyone.id, deny: [PermissionFlagsBits.ViewChannel] },
-                { id: user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.AttachFiles] }
+                {
+                    id: guild.roles.everyone.id,
+                    deny: [PermissionFlagsBits.ViewChannel]
+                },
+                {
+                    id: user.id,
+                    allow: [
+                        PermissionFlagsBits.ViewChannel,
+                        PermissionFlagsBits.SendMessages,
+                        PermissionFlagsBits.AttachFiles
+                    ]
+                }
             ];
 
             ROLES_STAFF_IDS.forEach(rolId => {
                 permissionOverwrites.push({
                     id: rolId,
-                    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.AttachFiles]
+                    allow: [
+                        PermissionFlagsBits.ViewChannel,
+                        PermissionFlagsBits.SendMessages,
+                        PermissionFlagsBits.AttachFiles
+                    ]
                 });
             });
 
@@ -411,56 +678,129 @@ client.on('interactionCreate', async (interaction) => {
                 });
 
                 const filaBotonesTicket = new ActionRowBuilder().addComponents(
-                    new ButtonBuilder().setCustomId('btn_reclamar').setLabel('Reclamar Ticket').setEmoji('📜').setStyle(BTN_STYLE.SECONDARY),
-                    new ButtonBuilder().setCustomId('btn_cerrar').setLabel('Cerrar Ticket').setEmoji('🔒').setStyle(BTN_STYLE.DANGER)
+                    new ButtonBuilder()
+                        .setCustomId('btn_reclamar')
+                        .setLabel('Reclamar Ticket')
+                        .setEmoji('📜')
+                        .setStyle(BTN_STYLE.SECONDARY),
+
+                    new ButtonBuilder()
+                        .setCustomId('btn_cerrar')
+                        .setLabel('Cerrar Ticket')
+                        .setEmoji('🔒')
+                        .setStyle(BTN_STYLE.DANGER)
                 );
 
                 const embedBienvenida = new EmbedBuilder()
                     .setTitle('🎟️ Ticket de MIDDLEMAN')
                     .setColor(0x2ECC71)
-                    .setDescription(`${user} abrió un ticket para **middleman**. Un miembro del staff te atenderá en breve.`)
-                    .setFooter({ text: 'Sistema de Tickets' })
+                    .setDescription(
+                        `${user} abrió un ticket para **middleman**. Un miembro del staff te atenderá en breve.`
+                    )
+                    .setFooter({
+                        text: 'Sistema de Tickets'
+                    })
                     .setTimestamp();
 
-                const mencionesRoles = ROLES_STAFF_IDS.map(id => `<@&${id}>`).join(' ');
-                const textoMenciones = `${user} ${mencionesRoles}`;
+                const mencionesRoles =
+                    ROLES_STAFF_IDS.map(id => `<@&${id}>`).join(' ');
 
-                await ticketChannel.send({ 
-                    content: textoMenciones, 
-                    embeds: [embedBienvenida], 
-                    components: [filaBotonesTicket] 
+                const textoMenciones =
+                    `${user} ${mencionesRoles}`;
+
+                await ticketChannel.send({
+                    content: textoMenciones,
+                    embeds: [embedBienvenida],
+                    components: [filaBotonesTicket]
                 });
 
-                return interaction.editReply({ content: `✅ Ticket creado en: ${ticketChannel}` });
+                return interaction.editReply({
+                    content: `✅ Ticket creado en: ${ticketChannel}`
+                });
+
             } catch (err) {
                 console.error(err);
-                return interaction.editReply({ content: '❌ Error al crear canal.' });
+
+                return interaction.editReply({
+                    content: '❌ Error al crear canal.'
+                });
             }
         }
 
+        // ========================================================
         // CREAR TICKET DE SOPORTE GENERAL
-        if (['ticket_soporte', 'ticket_pregunta', 'ticket_ayuda', 'ticket_reportar'].includes(customId)) {
-            await interaction.deferReply({ ephemeral: true });
+        // ========================================================
+
+        if (
+            [
+                'ticket_soporte',
+                'ticket_pregunta',
+                'ticket_ayuda',
+                'ticket_reportar'
+            ].includes(customId)
+        ) {
+            await interaction.deferReply({
+                ephemeral: true
+            });
 
             const detallesCategorias = {
-                'ticket_soporte': { nombre: 'soporte', emoji: '🎫', titulo: 'Ticket de SOPORTE', color: 0xE74C3C },
-                'ticket_pregunta': { nombre: 'pregunta', emoji: '❓', titulo: 'Ticket de PREGUNTA', color: 0x3498DB },
-                'ticket_ayuda': { nombre: 'ayuda', emoji: '⚠️', titulo: 'Ticket de AYUDA', color: 0x2ECC71 },
-                'ticket_reportar': { nombre: 'reportar', emoji: '🚨', titulo: 'Ticket de REPORTE', color: 0x95A5A6 }
+                'ticket_soporte': {
+                    nombre: 'soporte',
+                    emoji: '🎫',
+                    titulo: 'Ticket de SOPORTE',
+                    color: 0xE74C3C
+                },
+
+                'ticket_pregunta': {
+                    nombre: 'pregunta',
+                    emoji: '❓',
+                    titulo: 'Ticket de PREGUNTA',
+                    color: 0x3498DB
+                },
+
+                'ticket_ayuda': {
+                    nombre: 'ayuda',
+                    emoji: '⚠️',
+                    titulo: 'Ticket de AYUDA',
+                    color: 0x2ECC71
+                },
+
+                'ticket_reportar': {
+                    nombre: 'reportar',
+                    emoji: '🚨',
+                    titulo: 'Ticket de REPORTE',
+                    color: 0x95A5A6
+                }
             };
 
             const info = detallesCategorias[customId];
-            const nombreCanal = `ticket-${info.nombre}-${contadorSoporte++}`;
+
+            const nombreCanal =
+                `ticket-${info.nombre}-${contadorSoporte++}`;
 
             const permissionOverwrites = [
-                { id: guild.roles.everyone.id, deny: [PermissionFlagsBits.ViewChannel] },
-                { id: user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.AttachFiles] }
+                {
+                    id: guild.roles.everyone.id,
+                    deny: [PermissionFlagsBits.ViewChannel]
+                },
+                {
+                    id: user.id,
+                    allow: [
+                        PermissionFlagsBits.ViewChannel,
+                        PermissionFlagsBits.SendMessages,
+                        PermissionFlagsBits.AttachFiles
+                    ]
+                }
             ];
 
             ROLES_STAFF_IDS.forEach(rolId => {
                 permissionOverwrites.push({
                     id: rolId,
-                    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.AttachFiles]
+                    allow: [
+                        PermissionFlagsBits.ViewChannel,
+                        PermissionFlagsBits.SendMessages,
+                        PermissionFlagsBits.AttachFiles
+                    ]
                 });
             });
 
@@ -480,110 +820,328 @@ client.on('interactionCreate', async (interaction) => {
                 });
 
                 const filaBotonesTicket = new ActionRowBuilder().addComponents(
-                    new ButtonBuilder().setCustomId('btn_reclamar').setLabel('Reclamar Ticket').setEmoji('📜').setStyle(BTN_STYLE.SECONDARY),
-                    new ButtonBuilder().setCustomId('btn_cerrar').setLabel('Cerrar Ticket').setEmoji('🔒').setStyle(BTN_STYLE.DANGER)
+                    new ButtonBuilder()
+                        .setCustomId('btn_reclamar')
+                        .setLabel('Reclamar Ticket')
+                        .setEmoji('📜')
+                        .setStyle(BTN_STYLE.SECONDARY),
+
+                    new ButtonBuilder()
+                        .setCustomId('btn_cerrar')
+                        .setLabel('Cerrar Ticket')
+                        .setEmoji('🔒')
+                        .setStyle(BTN_STYLE.DANGER)
                 );
 
                 const embedBienvenida = new EmbedBuilder()
                     .setTitle(`${info.emoji} ${info.titulo}`)
                     .setColor(info.color)
-                    .setDescription(`${user} abrió un ticket para **${info.nombre}**. Un miembro del staff te atenderá en breve.`)
-                    .setFooter({ text: 'Sistema de Soporte' })
+                    .setDescription(
+                        `${user} abrió un ticket para **${info.nombre}**. Un miembro del staff te atenderá en breve.`
+                    )
+                    .setFooter({
+                        text: 'Sistema de Soporte'
+                    })
                     .setTimestamp();
 
-                const mencionesRoles = ROLES_STAFF_IDS.map(id => `<@&${id}>`).join(' ');
-                const textoMenciones = `${user} ${mencionesRoles}`;
+                const mencionesRoles =
+                    ROLES_STAFF_IDS.map(id => `<@&${id}>`).join(' ');
 
-                await ticketChannel.send({ 
-                    content: textoMenciones, 
-                    embeds: [embedBienvenida], 
-                    components: [filaBotonesTicket] 
+                const textoMenciones =
+                    `${user} ${mencionesRoles}`;
+
+                await ticketChannel.send({
+                    content: textoMenciones,
+                    embeds: [embedBienvenida],
+                    components: [filaBotonesTicket]
                 });
 
-                return interaction.editReply({ content: `✅ Ticket de ${info.nombre} creado en: ${ticketChannel}` });
+                return interaction.editReply({
+                    content: `✅ Ticket de ${info.nombre} creado en: ${ticketChannel}`
+                });
+
             } catch (err) {
                 console.error(err);
-                return interaction.editReply({ content: '❌ Error al crear el canal de ticket.' });
+
+                return interaction.editReply({
+                    content: '❌ Error al crear el canal de ticket.'
+                });
             }
         }
 
+        // ========================================================
         // RECLAMAR TICKET
+        // ========================================================
+
         if (customId === 'btn_reclamar') {
             const datos = ticketsBD.get(channel.id);
-            if (!datos) return interaction.reply({ content: '❌ Datos de ticket no encontrados.', ephemeral: true });
 
-            const tieneRolPermitido = ROLES_STAFF_IDS.some(rolId => interaction.member.roles.cache.has(rolId)) || 
-                                      interaction.member.permissions.has(PermissionFlagsBits.Administrator);
+            if (!datos) {
+                return interaction.reply({
+                    content: '❌ Datos de ticket no encontrados.',
+                    ephemeral: true
+                });
+            }
+
+            const tieneRolPermitido =
+                ROLES_STAFF_IDS.some(
+                    rolId => interaction.member.roles.cache.has(rolId)
+                ) ||
+                interaction.member.permissions.has(
+                    PermissionFlagsBits.Administrator
+                );
 
             if (!tieneRolPermitido) {
-                return interaction.reply({ content: '❌ No tienes permiso para reclamar este ticket.', ephemeral: true });
+                return interaction.reply({
+                    content: '❌ No tienes permiso para reclamar este ticket.',
+                    ephemeral: true
+                });
             }
 
             if (datos.reclamadoPor) {
-                return interaction.reply({ content: `⚠️ Este ticket ya fue reclamado por ${datos.reclamadoPor}.`, ephemeral: true });
+                return interaction.reply({
+                    content: `⚠️ Este ticket ya fue reclamado por ${datos.reclamadoPor}.`,
+                    ephemeral: true
+                });
             }
 
+            // Guardamos quién reclamó el ticket
             datos.reclamadoPor = user;
 
             try {
-                for (const rolId of ROLES_STAFF_IDS) {
-                    await channel.permissionOverwrites.edit(rolId, { ViewChannel: false }).catch(() => {});
+                // ====================================================
+                // TICKETS DE SOPORTE
+                // soporte, pregunta, ayuda y reportar
+                //
+                // IMPORTANTE:
+                // NO se oculta el ticket para el resto del staff.
+                // ====================================================
+
+                const esTicketSoporte = [
+                    'soporte',
+                    'pregunta',
+                    'ayuda',
+                    'reportar'
+                ].includes(datos.tipo);
+
+                if (esTicketSoporte) {
+
+                    // Todos los roles del staff mantienen acceso
+                    for (const rolId of ROLES_STAFF_IDS) {
+                        await channel.permissionOverwrites.edit(
+                            rolId,
+                            {
+                                ViewChannel: true,
+                                SendMessages: true,
+                                AttachFiles: true
+                            }
+                        ).catch(() => {});
+                    }
+
+                    // El creador mantiene acceso
+                    await channel.permissionOverwrites.edit(
+                        datos.creador.id,
+                        {
+                            ViewChannel: true,
+                            SendMessages: true,
+                            AttachFiles: true
+                        }
+                    ).catch(() => {});
+
+                } else {
+
+                    // =================================================
+                    // TICKET MIDDLEMAN
+                    //
+                    // Se mantiene el comportamiento original:
+                    // se oculta para el resto del staff.
+                    // =================================================
+
+                    for (const rolId of ROLES_STAFF_IDS) {
+                        await channel.permissionOverwrites.edit(
+                            rolId,
+                            {
+                                ViewChannel: false
+                            }
+                        ).catch(() => {});
+                    }
+
+                    // El staff que reclamó mantiene acceso
+                    await channel.permissionOverwrites.edit(
+                        user.id,
+                        {
+                            ViewChannel: true,
+                            SendMessages: true,
+                            AttachFiles: true
+                        }
+                    ).catch(() => {});
+
+                    // El creador mantiene acceso
+                    await channel.permissionOverwrites.edit(
+                        datos.creador.id,
+                        {
+                            ViewChannel: true,
+                            SendMessages: true,
+                            AttachFiles: true
+                        }
+                    ).catch(() => {});
                 }
 
-                await channel.permissionOverwrites.edit(user.id, { ViewChannel: true, SendMessages: true, AttachFiles: true });
+                // ====================================================
+                // ACTUALIZAR BOTONES
+                // ====================================================
 
                 const filaActualizada = new ActionRowBuilder().addComponents(
-                    new ButtonBuilder().setCustomId('btn_reclamar').setLabel('Ticket Reclamado').setEmoji('📜').setStyle(BTN_STYLE.SECONDARY).setDisabled(true),
-                    new ButtonBuilder().setCustomId('btn_cerrar').setLabel('Cerrar Ticket').setEmoji('🔒').setStyle(BTN_STYLE.DANGER)
+
+                    new ButtonBuilder()
+                        .setCustomId('btn_reclamar')
+                        .setLabel('Ticket Reclamado')
+                        .setEmoji('📜')
+                        .setStyle(BTN_STYLE.SECONDARY)
+                        .setDisabled(true),
+
+                    new ButtonBuilder()
+                        .setCustomId('btn_cerrar')
+                        .setLabel('Cerrar Ticket')
+                        .setEmoji('🔒')
+                        .setStyle(BTN_STYLE.DANGER)
                 );
 
-                await interaction.update({ components: [filaActualizada] });
+                await interaction.update({
+                    components: [filaActualizada]
+                });
 
-                return channel.send({ content: `📌 **Reclamado por ${user}.** Solo tú y ${datos.creador} tienen acceso a este canal.` });
+                // ====================================================
+                // MENSAJE SEGÚN EL TIPO DE TICKET
+                // ====================================================
+
+                if (esTicketSoporte) {
+                    return channel.send({
+                        content:
+                            `📌 **Ticket reclamado por ${user}.**\n` +
+                            `👥 El ticket continúa visible para todo el Staff.`
+                    });
+                }
+
+                return channel.send({
+                    content:
+                        `📌 **Reclamado por ${user}.** ` +
+                        `Solo tú y ${datos.creador} tienen acceso a este canal.`
+                });
+
             } catch (e) {
-                console.error(e);
+                console.error('Error al reclamar ticket:', e);
+
+                if (!interaction.replied && !interaction.deferred) {
+                    return interaction.reply({
+                        content: '❌ Ocurrió un error al reclamar el ticket.',
+                        ephemeral: true
+                    });
+                }
             }
         }
 
+        // ========================================================
         // CERRAR TICKET
+        // ========================================================
+
         if (customId === 'btn_cerrar') {
             const datos = ticketsBD.get(channel.id);
-            if (!datos) return interaction.reply({ content: '❌ Datos no encontrados.', ephemeral: true });
-            if (!datos.reclamadoPor) return interaction.reply({ content: '⚠️ Un encargado debe reclamar el ticket antes de cerrarlo.', ephemeral: true });
+
+            if (!datos) {
+                return interaction.reply({
+                    content: '❌ Datos no encontrados.',
+                    ephemeral: true
+                });
+            }
+
+            if (!datos.reclamadoPor) {
+                return interaction.reply({
+                    content: '⚠️ Un encargado debe reclamar el ticket antes de cerrarlo.',
+                    ephemeral: true
+                });
+            }
 
             if (datos.tipo === 'middleman' && !datos.resenaHecha) {
-                return interaction.reply({ 
-                    content: `⚠️ **ESPERA** Antes de cerrar el ticket, <@${datos.creador.id}> debe reseñar a: <@${datos.reclamadoPor.id}>`,
-                    ephemeral: false 
+                return interaction.reply({
+                    content:
+                        `⚠️ **ESPERA** Antes de cerrar el ticket, ` +
+                        `<@${datos.creador.id}> debe reseñar a: ` +
+                        `<@${datos.reclamadoPor.id}>`,
+                    ephemeral: false
                 });
             }
 
             const btnConfirmar = new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId('btn_confirmar_cierre').setLabel('⚠️ Confirmar Cierre').setStyle(BTN_STYLE.DANGER)
+                new ButtonBuilder()
+                    .setCustomId('btn_confirmar_cierre')
+                    .setLabel('⚠️ Confirmar Cierre')
+                    .setStyle(BTN_STYLE.DANGER)
             );
 
-            return interaction.reply({ content: '❓ ¿Estás seguro de cerrar este ticket?', components: [btnConfirmar] });
+            return interaction.reply({
+                content: '❓ ¿Estás seguro de cerrar este ticket?',
+                components: [btnConfirmar]
+            });
         }
 
+        // ========================================================
         // CONFIRMAR CIERRE
+        // ========================================================
+
         if (customId === 'btn_confirmar_cierre') {
             const datos = ticketsBD.get(channel.id);
-            await interaction.reply({ content: '🔒 Guardando log y cerrando en 5s...' });
+
+            if (!datos) {
+                return interaction.reply({
+                    content: '❌ Datos del ticket no encontrados.',
+                    ephemeral: true
+                });
+            }
+
+            await interaction.reply({
+                content: '🔒 Guardando log y cerrando en 5s...'
+            });
 
             const embedLog = new EmbedBuilder()
                 .setTitle(`📋 Log - ${channel.name}`)
                 .setColor(0x2ECC71)
                 .addFields(
-                    { name: '👤 Creador', value: `<@${datos.creador.id}>`, inline: true },
-                    { name: '📌 Atendido por', value: `<@${datos.reclamadoPor.id}>`, inline: true },
-                    { name: '🔒 Cerrado por', value: `<@${user.id}>`, inline: true },
-                    { name: '🕒 Creado', value: formatearFecha(datos.fechaApertura), inline: false },
-                    { name: '⏰ Cerrado', value: formatearFecha(new Date()), inline: false }
+                    {
+                        name: '👤 Creador',
+                        value: `<@${datos.creador.id}>`,
+                        inline: true
+                    },
+                    {
+                        name: '📌 Atendido por',
+                        value: `<@${datos.reclamadoPor.id}>`,
+                        inline: true
+                    },
+                    {
+                        name: '🔒 Cerrado por',
+                        value: `<@${user.id}>`,
+                        inline: true
+                    },
+                    {
+                        name: '🕒 Creado',
+                        value: formatearFecha(datos.fechaApertura),
+                        inline: false
+                    },
+                    {
+                        name: '⏰ Cerrado',
+                        value: formatearFecha(new Date()),
+                        inline: false
+                    }
                 )
                 .setTimestamp();
 
             const canalLogs = guild.channels.cache.get(CANAL_LOGS_ID);
-            if (canalLogs) await canalLogs.send({ embeds: [embedLog] });
+
+            if (canalLogs) {
+                await canalLogs.send({
+                    embeds: [embedLog]
+                });
+            }
 
             setTimeout(async () => {
                 ticketsBD.delete(channel.id);
