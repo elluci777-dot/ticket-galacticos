@@ -201,7 +201,7 @@ client.on('ready', async () => {
             },
 
             {
-                name: 'perdonar',
+                name: '',
                 description: 'Ruleta de perdón 50/50'
             }
 
@@ -581,10 +581,10 @@ client.on('interactionCreate', async interaction => {
         }
 
         // ====================================================
-        // PERDONAR
+        // P
         // ====================================================
 
-        if (commandName === 'perdonar') {
+        if (commandName === '') {
 
             const esPerdonado =
                 Math.random() < 0.5;
