@@ -48,10 +48,8 @@ const CANAL_RESENAS_ID = '1535036437865566348';
 // ROLES
 // ============================================================
 
-// Middleman
 const ROLE_MIDDLEMAN_ID = '1499596482322501802';
 
-// Todos los roles Staff
 const ROLES_STAFF_IDS = [
     '1499596482322501802', // Middleman
     '1517988091653259364', // Staff
@@ -61,8 +59,6 @@ const ROLES_STAFF_IDS = [
     '1498106196589154334'  // Dueño
 ];
 
-// Roles que pueden ver tickets de soporte.
-// IMPORTANTE: Middleman NO está incluido aquí.
 const ROLES_SOPORTE_IDS = [
     '1517988091653259364', // Staff
     '1499595987411406998', // Moderador
@@ -82,7 +78,7 @@ let contadorMiddleman = 1;
 let contadorSoporte = 1;
 
 // ============================================================
-// ESTILOS DE BOTONES
+// ESTILOS
 // ============================================================
 
 const BTN_STYLE = {
@@ -93,7 +89,7 @@ const BTN_STYLE = {
 };
 
 // ============================================================
-// FORMATEAR FECHA
+// FECHA
 // ============================================================
 
 function formatearFecha(fecha) {
@@ -108,10 +104,40 @@ function formatearFecha(fecha) {
 }
 
 // ============================================================
+// COMPROBAR STAFF
+// ============================================================
+
+function esStaff(member) {
+    if (!member) return false;
+
+    return (
+        member.permissions.has(PermissionFlagsBits.Administrator) ||
+        ROLES_STAFF_IDS.some(
+            rolId => member.roles.cache.has(rolId)
+        )
+    );
+}
+
+// ============================================================
+// COMPROBAR STAFF SUPERIOR A MIDDLEMAN
+// ============================================================
+
+function esStaffSuperior(member) {
+    if (!member) return false;
+
+    return (
+        member.permissions.has(PermissionFlagsBits.Administrator) ||
+        ROLES_SOPORTE_IDS.some(
+            rolId => member.roles.cache.has(rolId)
+        )
+    );
+}
+
+// ============================================================
 // READY
 // ============================================================
 
-client.on('ready', async () => {
+client.once('ready', async () => {
 
     console.log(`✅ Bot conectado como: ${client.user.tag}`);
 
@@ -131,7 +157,7 @@ client.on('ready', async () => {
 
             {
                 name: 'añadir',
-                description: 'Añadir al comprador/vendedor al ticket (Solo Middlemans en adelante)',
+                description: 'Añadir un usuario al ticket',
                 default_member_permissions:
                     PermissionFlagsBits.ManageChannels.toString(),
 
@@ -164,7 +190,7 @@ client.on('ready', async () => {
 
                     {
                         name: 'estrellas',
-                        description: 'Calificación (1 a 5)',
+                        description: 'Calificación de 1 a 5',
                         type: ApplicationCommandOptionType.Integer,
                         required: true,
                         min_value: 1,
@@ -182,7 +208,7 @@ client.on('ready', async () => {
 
             {
                 name: 'reseñas',
-                description: 'Ver todas las reseñas de un usuario (Tickets y Subastas)',
+                description: 'Ver todas las reseñas de un usuario',
 
                 options: [
                     {
@@ -196,13 +222,12 @@ client.on('ready', async () => {
 
             {
                 name: 'repuntuaciones',
-                description:
-                    'Muestra el Top 10 de mejores calificaciones y puntuaciones de los miembros'
+                description: 'Muestra el Top 10 de mejores calificaciones'
             },
 
             {
-                name: '',
-                description: 'Ruleta de perdón 50/50'
+                name: 'spin',
+                description: 'Ruleta del perdón 50/50'
             }
 
         ]);
@@ -385,20 +410,11 @@ client.on('interactionCreate', async interaction => {
 
             }
 
-            const esStaff =
-                ROLES_STAFF_IDS.some(
-                    rolId =>
-                        member.roles.cache.has(rolId)
-                ) ||
-                member.permissions.has(
-                    PermissionFlagsBits.Administrator
-                );
-
-            if (!esStaff) {
+            if (!esStaff(member)) {
 
                 return interaction.reply({
                     content:
-                        '❌ Solo un **Middleman** o rol superior puede añadir usuarios al ticket.',
+                        '❌ Solo un **Middleman o superior** puede añadir usuarios al ticket.',
                     ephemeral: true
                 });
 
@@ -460,13 +476,7 @@ client.on('interactionCreate', async interaction => {
             }
 
             const tienePermisoStaff =
-                ROLES_STAFF_IDS.some(
-                    rolId =>
-                        member.roles.cache.has(rolId)
-                ) ||
-                member.permissions.has(
-                    PermissionFlagsBits.Administrator
-                );
+                esStaff(member);
 
             if (!tienePermisoStaff) {
 
@@ -495,9 +505,7 @@ client.on('interactionCreate', async interaction => {
 
             const fechaApertura =
                 datos?.fechaApertura
-                    ? formatearFecha(
-                        datos.fechaApertura
-                    )
+                    ? formatearFecha(datos.fechaApertura)
                     : 'Desconocida';
 
             const embedLog =
@@ -536,9 +544,7 @@ client.on('interactionCreate', async interaction => {
                         {
                             name: '⏰ Cerrado',
                             value:
-                                formatearFecha(
-                                    new Date()
-                                ),
+                                formatearFecha(new Date()),
                             inline: false
                         }
 
@@ -550,9 +556,7 @@ client.on('interactionCreate', async interaction => {
                     .setTimestamp();
 
             const canalLogs =
-                guild.channels.cache.get(
-                    CANAL_LOGS_ID
-                );
+                guild.channels.cache.get(CANAL_LOGS_ID);
 
             if (canalLogs) {
 
@@ -565,9 +569,7 @@ client.on('interactionCreate', async interaction => {
             setTimeout(
                 async () => {
 
-                    ticketsBD.delete(
-                        channel.id
-                    );
+                    ticketsBD.delete(channel.id);
 
                     await channel
                         .delete()
@@ -581,10 +583,10 @@ client.on('interactionCreate', async interaction => {
         }
 
         // ====================================================
-        // P
+        // SPIN
         // ====================================================
 
-        if (commandName === '') {
+        if (commandName === 'spin') {
 
             const esPerdonado =
                 Math.random() < 0.5;
@@ -618,9 +620,7 @@ client.on('interactionCreate', async interaction => {
         if (commandName === 'reseñar') {
 
             const datos =
-                ticketsBD.get(
-                    channel.id
-                );
+                ticketsBD.get(channel.id);
 
             const esCanalTicket =
                 channel.name.startsWith(
@@ -633,6 +633,16 @@ client.on('interactionCreate', async interaction => {
                 return interaction.reply({
                     content:
                         '❌ Este comando solo se puede utilizar dentro de un ticket activo de Middleman.',
+                    ephemeral: true
+                });
+
+            }
+
+            if (datos && datos.tipo !== 'middleman') {
+
+                return interaction.reply({
+                    content:
+                        '❌ Las reseñas solo pueden hacerse en tickets de Middleman.',
                     ephemeral: true
                 });
 
@@ -687,14 +697,10 @@ client.on('interactionCreate', async interaction => {
             }
 
             const estrellas =
-                options.getInteger(
-                    'estrellas'
-                );
+                options.getInteger('estrellas');
 
             const comentario =
-                options.getString(
-                    'comentario'
-                ) ||
+                options.getString('comentario') ||
                 'Sin comentario.';
 
             if (!resenasBD.has(objetivo.id)) {
@@ -724,9 +730,7 @@ client.on('interactionCreate', async interaction => {
             }
 
             const estrellasStr =
-                '⭐'.repeat(
-                    estrellas
-                );
+                '⭐'.repeat(estrellas);
 
             const embedResena =
                 new EmbedBuilder()
@@ -767,14 +771,10 @@ client.on('interactionCreate', async interaction => {
             }
 
             const usuario =
-                options.getUser(
-                    'usuario'
-                );
+                options.getUser('usuario');
 
             const lista =
-                resenasBD.get(
-                    usuario.id
-                ) || [];
+                resenasBD.get(usuario.id) || [];
 
             if (lista.length === 0) {
 
@@ -789,8 +789,7 @@ client.on('interactionCreate', async interaction => {
                 (
                     lista.reduce(
                         (acc, r) =>
-                            acc +
-                            r.estrellas,
+                            acc + r.estrellas,
                         0
                     ) /
                     lista.length
@@ -800,19 +799,17 @@ client.on('interactionCreate', async interaction => {
 
             lista
                 .slice(-10)
-                .forEach(
-                    (r, i) => {
+                .forEach((r, i) => {
 
-                        const tagOrigen =
-                            r.tipoOrigen ||
-                            '⭐ General';
+                    const tagOrigen =
+                        r.tipoOrigen ||
+                        '⭐ General';
 
-                        texto +=
-                            `**${i + 1}.** [${tagOrigen}] Por <@${r.autorId}> - ${'⭐'.repeat(r.estrellas)}\n` +
-                            `> *${r.comentario}*\n\n`;
+                    texto +=
+                        `**${i + 1}.** [${tagOrigen}] Por <@${r.autorId}> - ${'⭐'.repeat(r.estrellas)}\n` +
+                        `> *${r.comentario}*\n\n`;
 
-                    }
-                );
+                });
 
             const embedHistorial =
                 new EmbedBuilder()
@@ -846,8 +843,7 @@ client.on('interactionCreate', async interaction => {
         // ====================================================
 
         if (
-            commandName ===
-            'repuntuaciones'
+            commandName === 'repuntuaciones'
         ) {
 
             if (
@@ -872,8 +868,7 @@ client.on('interactionCreate', async interaction => {
                     const promedio =
                         lista.reduce(
                             (acc, r) =>
-                                acc +
-                                r.estrellas,
+                                acc + r.estrellas,
                             0
                         ) / total;
 
@@ -915,10 +910,7 @@ client.on('interactionCreate', async interaction => {
             let descripcionTop = '';
 
             const top10 =
-                listaUsuarios.slice(
-                    0,
-                    10
-                );
+                listaUsuarios.slice(0, 10);
 
             top10.forEach(
                 (item, index) => {
@@ -928,9 +920,7 @@ client.on('interactionCreate', async interaction => {
                         '🎖️';
 
                     const promFormat =
-                        item.promedio.toFixed(
-                            1
-                        );
+                        item.promedio.toFixed(1);
 
                     descripcionTop +=
                         `${emojiMedalla} **#${index + 1}** <@${item.usuarioId}>\n` +
@@ -970,7 +960,8 @@ client.on('interactionCreate', async interaction => {
             customId,
             guild,
             user,
-            channel
+            channel,
+            member
         } = interaction;
 
         // ====================================================
@@ -1009,7 +1000,6 @@ client.on('interactionCreate', async interaction => {
 
             ];
 
-            // Todos los Staff pueden ver Middleman
             ROLES_STAFF_IDS.forEach(
                 rolId => {
 
@@ -1087,9 +1077,7 @@ client.on('interactionCreate', async interaction => {
                         .setTitle(
                             '🎟️ Ticket de MIDDLEMAN'
                         )
-                        .setColor(
-                            0x2ECC71
-                        )
+                        .setColor(0x2ECC71)
                         .setDescription(
                             `${user} abrió un ticket para **middleman**. Un miembro del staff te atenderá en breve.`
                         )
@@ -1193,9 +1181,7 @@ client.on('interactionCreate', async interaction => {
             };
 
             const info =
-                detallesCategorias[
-                    customId
-                ];
+                detallesCategorias[customId];
 
             const nombreCanal =
                 `ticket-${info.nombre}-${contadorSoporte++}`;
@@ -1218,7 +1204,6 @@ client.on('interactionCreate', async interaction => {
                     ]
                 },
 
-                // Middleman queda EXPLÍCITAMENTE bloqueado
                 {
                     id: ROLE_MIDDLEMAN_ID,
                     deny: [
@@ -1228,8 +1213,6 @@ client.on('interactionCreate', async interaction => {
 
             ];
 
-            // Staff, Moderador, Admin, Co-Owner y Dueño
-            // pueden ver los tickets de soporte.
             ROLES_SOPORTE_IDS.forEach(
                 rolId => {
 
@@ -1267,8 +1250,6 @@ client.on('interactionCreate', async interaction => {
                         creador: user,
                         reclamadoPor: null,
                         fechaApertura: new Date(),
-
-                        // Soporte no necesita reseña
                         resenaHecha: true
 
                     }
@@ -1309,9 +1290,7 @@ client.on('interactionCreate', async interaction => {
                         .setTitle(
                             `${info.emoji} ${info.titulo}`
                         )
-                        .setColor(
-                            info.color
-                        )
+                        .setColor(info.color)
                         .setDescription(
                             `${user} abrió un ticket para **${info.nombre}**. Un miembro del staff te atenderá en breve.`
                         )
@@ -1375,9 +1354,7 @@ client.on('interactionCreate', async interaction => {
         ) {
 
             const datos =
-                ticketsBD.get(
-                    channel.id
-                );
+                ticketsBD.get(channel.id);
 
             if (!datos) {
 
@@ -1392,25 +1369,15 @@ client.on('interactionCreate', async interaction => {
 
             }
 
-            // =================================================
-            // COMPROBAR SI ES ADMIN
-            // =================================================
-
             const esAdministrador =
-                interaction.member.permissions.has(
+                member.permissions.has(
                     PermissionFlagsBits.Administrator
                 );
-
-            // =================================================
-            // COMPROBAR ROLES
-            // =================================================
 
             const tieneRolStaff =
                 ROLES_STAFF_IDS.some(
                     rolId =>
-                        interaction.member.roles.cache.has(
-                            rolId
-                        )
+                        member.roles.cache.has(rolId)
                 );
 
             if (
@@ -1429,10 +1396,6 @@ client.on('interactionCreate', async interaction => {
 
             }
 
-            // =================================================
-            // COMPROBAR TIPO DE TICKET
-            // =================================================
-
             const esTicketSoporte = [
 
                 'soporte',
@@ -1440,48 +1403,18 @@ client.on('interactionCreate', async interaction => {
                 'ayuda',
                 'reportar'
 
-            ].includes(
-                datos.tipo
-            );
+            ].includes(datos.tipo);
 
             const esMiddleman =
-                interaction.member.roles.cache.has(
+                member.roles.cache.has(
                     ROLE_MIDDLEMAN_ID
                 );
-
-            // =================================================
-            // COMPROBAR SI TIENE ROL SUPERIOR A MIDDLEMAN
-            // =================================================
 
             const tieneRolSuperior =
                 ROLES_SOPORTE_IDS.some(
                     rolId =>
-                        interaction.member.roles.cache.has(
-                            rolId
-                        )
+                        member.roles.cache.has(rolId)
                 );
-
-            /*
-                CASOS:
-
-                Middleman solamente:
-                esMiddleman = true
-                tieneRolSuperior = false
-                ❌ No puede soporte
-
-                Middleman + Moderador:
-                esMiddleman = true
-                tieneRolSuperior = true
-                ✅ Puede soporte
-
-                Middleman + Staff:
-                true + true
-                ✅ Puede soporte
-
-                Moderador solamente:
-                false + true
-                ✅ Puede soporte
-            */
 
             if (
                 esTicketSoporte &&
@@ -1501,10 +1434,6 @@ client.on('interactionCreate', async interaction => {
 
             }
 
-            // =================================================
-            // YA RECLAMADO
-            // =================================================
-
             if (datos.reclamadoPor) {
 
                 return interaction.reply({
@@ -1518,77 +1447,47 @@ client.on('interactionCreate', async interaction => {
 
             }
 
-            // =================================================
-            // GUARDAR QUIÉN LO RECLAMÓ
-            // =================================================
-
             datos.reclamadoPor =
                 user;
 
             try {
 
                 // =================================================
-                // TICKET DE SOPORTE
+                // TICKET SOPORTE
                 // =================================================
 
                 if (esTicketSoporte) {
 
-                    /*
-                        IMPORTANTE:
-
-                        NO se elimina la visibilidad
-                        del resto del Staff.
-
-                        Por eso NO hacemos:
-
-                        ViewChannel: false
-
-                        para los demás roles.
-                    */
-
-                    // Middleman SOLO sigue sin poder verlo.
                     await channel.permissionOverwrites.edit(
-
                         ROLE_MIDDLEMAN_ID,
-
                         {
                             ViewChannel: false
                         }
-
                     ).catch(() => {});
 
-                    // Todos los roles superiores
-                    // mantienen acceso.
                     for (
                         const rolId
                         of ROLES_SOPORTE_IDS
                     ) {
 
                         await channel.permissionOverwrites.edit(
-
                             rolId,
-
                             {
                                 ViewChannel: true,
                                 SendMessages: true,
                                 AttachFiles: true
                             }
-
                         ).catch(() => {});
 
                     }
 
-                    // El creador mantiene acceso.
                     await channel.permissionOverwrites.edit(
-
                         datos.creador.id,
-
                         {
                             ViewChannel: true,
                             SendMessages: true,
                             AttachFiles: true
                         }
-
                     ).catch(() => {});
 
                 }
@@ -1599,52 +1498,36 @@ client.on('interactionCreate', async interaction => {
 
                 else {
 
-                    /*
-                        Cuando un ticket Middleman es reclamado,
-                        se oculta para los demás Staff.
-                    */
-
                     for (
                         const rolId
                         of ROLES_STAFF_IDS
                     ) {
 
                         await channel.permissionOverwrites.edit(
-
                             rolId,
-
                             {
                                 ViewChannel: false
                             }
-
                         ).catch(() => {});
 
                     }
 
-                    // El que reclamó mantiene acceso.
                     await channel.permissionOverwrites.edit(
-
                         user.id,
-
                         {
                             ViewChannel: true,
                             SendMessages: true,
                             AttachFiles: true
                         }
-
                     ).catch(() => {});
 
-                    // El creador mantiene acceso.
                     await channel.permissionOverwrites.edit(
-
                         datos.creador.id,
-
                         {
                             ViewChannel: true,
                             SendMessages: true,
                             AttachFiles: true
                         }
-
                     ).catch(() => {});
 
                 }
@@ -1692,10 +1575,6 @@ client.on('interactionCreate', async interaction => {
 
                 });
 
-                // =================================================
-                // MENSAJE DE RECLAMACIÓN
-                // =================================================
-
                 if (esTicketSoporte) {
 
                     return channel.send({
@@ -1736,9 +1615,7 @@ client.on('interactionCreate', async interaction => {
         ) {
 
             const datos =
-                ticketsBD.get(
-                    channel.id
-                );
+                ticketsBD.get(channel.id);
 
             if (!datos) {
 
@@ -1746,6 +1623,23 @@ client.on('interactionCreate', async interaction => {
 
                     content:
                         '❌ Datos no encontrados.',
+
+                    ephemeral: true
+
+                });
+
+            }
+
+            // =================================================
+            // SOLO MIDDLEMAN O SUPERIOR
+            // =================================================
+
+            if (!esStaff(member)) {
+
+                return interaction.reply({
+
+                    content:
+                        '❌ Solo un **Middleman o superior** puede cerrar tickets.',
 
                     ephemeral: true
 
@@ -1766,10 +1660,12 @@ client.on('interactionCreate', async interaction => {
 
             }
 
-            // Middleman requiere reseña
+            // =================================================
+            // RESEÑA OBLIGATORIA PARA MIDDLEMAN
+            // =================================================
+
             if (
-                datos.tipo ===
-                    'middleman' &&
+                datos.tipo === 'middleman' &&
                 !datos.resenaHecha
             ) {
 
@@ -1804,7 +1700,7 @@ client.on('interactionCreate', async interaction => {
             return interaction.reply({
 
                 content:
-                    '❓ ¿Estás seguro de cerrar este ticket?',
+                    '¿Estás seguro de cerrar este ticket?',
 
                 components: [
                     btnConfirmar
@@ -1823,9 +1719,7 @@ client.on('interactionCreate', async interaction => {
         ) {
 
             const datos =
-                ticketsBD.get(
-                    channel.id
-                );
+                ticketsBD.get(channel.id);
 
             if (!datos) {
 
@@ -1840,10 +1734,58 @@ client.on('interactionCreate', async interaction => {
 
             }
 
-            await interaction.reply({
+            // =================================================
+            // VOLVER A COMPROBAR PERMISOS
+            // =================================================
+
+            if (!esStaff(member)) {
+
+                return interaction.reply({
+
+                    content:
+                        '❌ Solo un **Middleman o superior** puede cerrar tickets.',
+
+                    ephemeral: true
+
+                });
+
+            }
+
+            if (!datos.reclamadoPor) {
+
+                return interaction.reply({
+
+                    content:
+                        '❌ El ticket no tiene un encargado.',
+
+                    ephemeral: true
+
+                });
+
+            }
+
+            if (
+                datos.tipo === 'middleman' &&
+                !datos.resenaHecha
+            ) {
+
+                return interaction.reply({
+
+                    content:
+                        `⚠️ <@${datos.creador.id}> todavía debe realizar la reseña.`,
+
+                    ephemeral: true
+
+                });
+
+            }
+
+            await interaction.update({
 
                 content:
-                    '🔒 Guardando log y cerrando en 5s...'
+                    '🔒 Guardando log y cerrando en 5s...',
+
+                components: []
 
             });
 
@@ -1852,9 +1794,7 @@ client.on('interactionCreate', async interaction => {
                     .setTitle(
                         `📋 Log - ${channel.name}`
                     )
-                    .setColor(
-                        0x2ECC71
-                    )
+                    .setColor(0x2ECC71)
                     .addFields(
 
                         {
