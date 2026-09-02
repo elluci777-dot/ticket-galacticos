@@ -1,4 +1,3 @@
-```js
 require('dotenv').config();
 
 const {
@@ -113,9 +112,9 @@ function esStaff(member) {
 
     return (
         member.permissions.has(PermissionFlagsBits.Administrator) ||
-        ROLES_STAFF_IDS.some(
-            rolId => member.roles.cache.has(rolId)
-        )
+        ROLES_STAFF_IDS.some(function(rolId) {
+            return member.roles.cache.has(rolId);
+        })
     );
 }
 
@@ -128,9 +127,9 @@ function esStaffSuperior(member) {
 
     return (
         member.permissions.has(PermissionFlagsBits.Administrator) ||
-        ROLES_SOPORTE_IDS.some(
-            rolId => member.roles.cache.has(rolId)
-        )
+        ROLES_SOPORTE_IDS.some(function(rolId) {
+            return member.roles.cache.has(rolId);
+        })
     );
 }
 
@@ -138,9 +137,9 @@ function esStaffSuperior(member) {
 // READY
 // ============================================================
 
-client.once('ready', async () => {
+client.once('ready', async function() {
 
-    console.log('Bot conectado como: ' + client.user.tag);
+    console.log('✅ Bot conectado como: ' + client.user.tag);
 
     try {
 
@@ -159,6 +158,7 @@ client.once('ready', async () => {
             {
                 name: 'añadir',
                 description: 'Añadir un usuario al ticket',
+
                 default_member_permissions:
                     PermissionFlagsBits.ManageChannels.toString(),
 
@@ -246,7 +246,7 @@ client.once('ready', async () => {
 // INTERACTIONS
 // ============================================================
 
-client.on('interactionCreate', async interaction => {
+client.on('interactionCreate', async function(interaction) {
 
     // ========================================================
     // COMANDOS SLASH
@@ -254,14 +254,12 @@ client.on('interactionCreate', async interaction => {
 
     if (interaction.isChatInputCommand()) {
 
-        const {
-            commandName,
-            options,
-            channel,
-            user,
-            member,
-            guild
-        } = interaction;
+        const commandName = interaction.commandName;
+        const options = interaction.options;
+        const channel = interaction.channel;
+        const user = interaction.user;
+        const member = interaction.member;
+        const guild = interaction.guild;
 
         // ====================================================
         // PANEL MIDDLEMAN
@@ -434,7 +432,9 @@ client.on('interactionCreate', async interaction => {
 
                 return interaction.reply({
                     content:
-                        `✅ ${usuarioAAñadir} ha sido añadido al ticket.`
+                        '✅ ' +
+                        usuarioAAñadir +
+                        ' ha sido añadido al ticket.'
                 });
 
             } catch (err) {
@@ -489,24 +489,26 @@ client.on('interactionCreate', async interaction => {
             });
 
             const creadorMencion =
-                datos?.creador
+                datos && datos.creador
                     ? '<@' + datos.creador.id + '>'
                     : 'Desconocido';
 
             const atendidoMencion =
-                datos?.reclamadoPor
+                datos && datos.reclamadoPor
                     ? '<@' + datos.reclamadoPor.id + '>'
                     : 'Sin reclamar';
 
             const fechaApertura =
-                datos?.fechaApertura
+                datos && datos.fechaApertura
                     ? formatearFecha(datos.fechaApertura)
                     : 'Desconocida';
 
             const embedLog =
                 new EmbedBuilder()
                     .setTitle(
-                        '📋 Log - ' + channel.name + ' (Cierre Forzado)'
+                        '📋 Log - ' +
+                        channel.name +
+                        ' (Cierre Forzado)'
                     )
                     .setColor(0xE74C3C)
                     .addFields(
@@ -526,7 +528,9 @@ client.on('interactionCreate', async interaction => {
                         {
                             name: '🔒 Cerrado por',
                             value:
-                                '<@' + user.id + '> (Forzado)',
+                                '<@' +
+                                user.id +
+                                '> (Forzado)',
                             inline: true
                         },
 
@@ -562,13 +566,13 @@ client.on('interactionCreate', async interaction => {
             }
 
             setTimeout(
-                async () => {
+                async function() {
 
                     ticketsBD.delete(channel.id);
 
                     await channel
                         .delete()
-                        .catch(() => {});
+                        .catch(function() {});
 
                 },
                 5000
@@ -586,6 +590,11 @@ client.on('interactionCreate', async interaction => {
             const esPerdonado =
                 Math.random() < 0.5;
 
+            const resultado =
+                esPerdonado
+                    ? 'PERDONADO 🟢'
+                    : 'NO PERDONADO 🔴';
+
             const embedRuleta =
                 new EmbedBuilder()
                     .setTitle('🎰 Ruleta del Perdón')
@@ -595,13 +604,11 @@ client.on('interactionCreate', async interaction => {
                             : 0xE74C3C
                     )
                     .setDescription(
-                        '**Juzgando a:** ' + user + '\n\n' +
+                        '**Juzgando a:** ' +
+                        user +
+                        '\n\n' +
                         '**Resultado:** ' +
-                        (
-                            esPerdonado
-                                ? 'PERDONADO 🟢'
-                                : 'NO PERDONADO 🔴'
-                        )
+                        resultado
                     );
 
             return interaction.reply({
@@ -653,8 +660,7 @@ client.on('interactionCreate', async interaction => {
             if (
                 datos &&
                 datos.reclamadoPor &&
-                objetivo.id !==
-                    datos.reclamadoPor.id
+                objetivo.id !== datos.reclamadoPor.id
             ) {
 
                 return interaction.reply({
@@ -669,8 +675,7 @@ client.on('interactionCreate', async interaction => {
 
             if (
                 datos &&
-                user.id !==
-                    datos.creador.id
+                user.id !== datos.creador.id
             ) {
 
                 return interaction.reply({
@@ -715,8 +720,8 @@ client.on('interactionCreate', async interaction => {
                 .push({
 
                     autorId: user.id,
-                    estrellas,
-                    comentario,
+                    estrellas: estrellas,
+                    comentario: comentario,
                     tipoOrigen: origen
 
                 });
@@ -733,15 +738,25 @@ client.on('interactionCreate', async interaction => {
             const embedResena =
                 new EmbedBuilder()
                     .setTitle(
-                        '⭐ Reseña Guardada (' + origen + ')'
+                        '⭐ Reseña Guardada (' +
+                        origen +
+                        ')'
                     )
                     .setColor(0xF1C40F)
                     .setDescription(
-                        '**Cliente:** ' + user + '\n' +
-                        '**Middleman Reseñado:** ' + objetivo + '\n' +
-                        '**Calificación:** ' + estrellasStr +
-                        ' (' + estrellas + '/5)\n' +
-                        '**Comentario:** ' + comentario
+                        '**Cliente:** ' +
+                        user +
+                        '\n' +
+                        '**Middleman Reseñado:** ' +
+                        objetivo +
+                        '\n' +
+                        '**Calificación:** ' +
+                        estrellasStr +
+                        ' (' +
+                        estrellas +
+                        '/5)\n' +
+                        '**Comentario:** ' +
+                        comentario
                     )
                     .setTimestamp();
 
@@ -757,8 +772,7 @@ client.on('interactionCreate', async interaction => {
         if (commandName === 'reseñas') {
 
             if (
-                channel.id !==
-                CANAL_RESENAS_ID
+                channel.id !== CANAL_RESENAS_ID
             ) {
 
                 return interaction.reply({
@@ -791,8 +805,9 @@ client.on('interactionCreate', async interaction => {
             const promedio =
                 (
                     lista.reduce(
-                        (acc, r) =>
-                            acc + r.estrellas,
+                        function(acc, r) {
+                            return acc + r.estrellas;
+                        },
                         0
                     ) /
                     lista.length
@@ -802,7 +817,7 @@ client.on('interactionCreate', async interaction => {
 
             lista
                 .slice(-10)
-                .forEach((r, i) => {
+                .forEach(function(r, i) {
 
                     const tagOrigen =
                         r.tipoOrigen ||
@@ -877,29 +892,30 @@ client.on('interactionCreate', async interaction => {
             const listaUsuarios = [];
 
             resenasBD.forEach(
-                (lista, usuarioId) => {
+                function(lista, usuarioId) {
 
                     const total =
                         lista.length;
 
                     const promedio =
                         lista.reduce(
-                            (acc, r) =>
-                                acc + r.estrellas,
+                            function(acc, r) {
+                                return acc + r.estrellas;
+                            },
                             0
                         ) / total;
 
                     listaUsuarios.push({
-                        usuarioId,
-                        promedio,
-                        total
+                        usuarioId: usuarioId,
+                        promedio: promedio,
+                        total: total
                     });
 
                 }
             );
 
             listaUsuarios.sort(
-                (a, b) => {
+                function(a, b) {
 
                     if (
                         b.promedio !==
@@ -930,7 +946,7 @@ client.on('interactionCreate', async interaction => {
                 listaUsuarios.slice(0, 10);
 
             top10.forEach(
-                (item, index) => {
+                function(item, index) {
 
                     const emojiMedalla =
                         medallas[index] ||
@@ -982,13 +998,11 @@ client.on('interactionCreate', async interaction => {
 
     if (interaction.isButton()) {
 
-        const {
-            customId,
-            guild,
-            user,
-            channel,
-            member
-        } = interaction;
+        const customId = interaction.customId;
+        const guild = interaction.guild;
+        const user = interaction.user;
+        const channel = interaction.channel;
+        const member = interaction.member;
 
         // ====================================================
         // CREAR TICKET MIDDLEMAN
@@ -1028,7 +1042,7 @@ client.on('interactionCreate', async interaction => {
             ];
 
             ROLES_STAFF_IDS.forEach(
-                rolId => {
+                function(rolId) {
 
                     permissionOverwrites.push({
 
@@ -1052,7 +1066,7 @@ client.on('interactionCreate', async interaction => {
 
                         name: nombreCanal,
                         type: 0,
-                        permissionOverwrites
+                        permissionOverwrites: permissionOverwrites
 
                     });
 
@@ -1118,10 +1132,9 @@ client.on('interactionCreate', async interaction => {
                 const mencionesRoles =
                     ROLES_STAFF_IDS
                         .map(
-                            id =>
-                                '<@&' +
-                                id +
-                                '>'
+                            function(id) {
+                                return '<@&' + id + '>';
+                            }
                         )
                         .join(' ');
 
@@ -1250,7 +1263,7 @@ client.on('interactionCreate', async interaction => {
             ];
 
             ROLES_SOPORTE_IDS.forEach(
-                rolId => {
+                function(rolId) {
 
                     permissionOverwrites.push({
 
@@ -1274,7 +1287,7 @@ client.on('interactionCreate', async interaction => {
 
                         name: nombreCanal,
                         type: 0,
-                        permissionOverwrites
+                        permissionOverwrites: permissionOverwrites
 
                     });
 
@@ -1344,10 +1357,9 @@ client.on('interactionCreate', async interaction => {
                 const mencionesRoles =
                     ROLES_SOPORTE_IDS
                         .map(
-                            id =>
-                                '<@&' +
-                                id +
-                                '>'
+                            function(id) {
+                                return '<@&' + id + '>';
+                            }
                         )
                         .join(' ');
 
@@ -1424,8 +1436,9 @@ client.on('interactionCreate', async interaction => {
 
             const tieneRolStaff =
                 ROLES_STAFF_IDS.some(
-                    rolId =>
-                        member.roles.cache.has(rolId)
+                    function(rolId) {
+                        return member.roles.cache.has(rolId);
+                    }
                 );
 
             if (
@@ -1460,8 +1473,9 @@ client.on('interactionCreate', async interaction => {
 
             const tieneRolSuperior =
                 ROLES_SOPORTE_IDS.some(
-                    rolId =>
-                        member.roles.cache.has(rolId)
+                    function(rolId) {
+                        return member.roles.cache.has(rolId);
+                    }
                 );
 
             if (
@@ -1513,7 +1527,7 @@ client.on('interactionCreate', async interaction => {
                         {
                             ViewChannel: false
                         }
-                    ).catch(() => {});
+                    ).catch(function() {});
 
                     for (
                         const rolId
@@ -1527,7 +1541,7 @@ client.on('interactionCreate', async interaction => {
                                 SendMessages: true,
                                 AttachFiles: true
                             }
-                        ).catch(() => {});
+                        ).catch(function() {});
 
                     }
 
@@ -1538,7 +1552,7 @@ client.on('interactionCreate', async interaction => {
                             SendMessages: true,
                             AttachFiles: true
                         }
-                    ).catch(() => {});
+                    ).catch(function() {});
 
                 }
 
@@ -1553,8 +1567,10 @@ client.on('interactionCreate', async interaction => {
                         of ROLES_STAFF_IDS
                     ) {
 
-                        // ROL 1517988091653259364
-                        // MANTIENE ACCESO AL TICKET
+                        /*
+                         * EL ROL 1517988091653259364
+                         * MANTIENE ACCESO AL TICKET.
+                         */
 
                         if (
                             rolId ===
@@ -1568,7 +1584,7 @@ client.on('interactionCreate', async interaction => {
                                     SendMessages: true,
                                     AttachFiles: true
                                 }
-                            ).catch(() => {});
+                            ).catch(function() {});
 
                         } else {
 
@@ -1577,7 +1593,7 @@ client.on('interactionCreate', async interaction => {
                                 {
                                     ViewChannel: false
                                 }
-                            ).catch(() => {});
+                            ).catch(function() {});
 
                         }
                     }
@@ -1589,7 +1605,7 @@ client.on('interactionCreate', async interaction => {
                             SendMessages: true,
                             AttachFiles: true
                         }
-                    ).catch(() => {});
+                    ).catch(function() {});
 
                     await channel.permissionOverwrites.edit(
                         datos.creador.id,
@@ -1598,7 +1614,7 @@ client.on('interactionCreate', async interaction => {
                             SendMessages: true,
                             AttachFiles: true
                         }
-                    ).catch(() => {});
+                    ).catch(function() {});
 
                 }
 
@@ -1665,7 +1681,7 @@ client.on('interactionCreate', async interaction => {
                         '📌 **Reclamado por ' +
                         user +
                         '.**\n' +
-                        '🔒 Solo el creador, el miembro del Staff que reclamó y el rol Staff autorizado tienen acceso.'
+                        '🔒 Solo el creador, el miembro que reclamó y el rol Staff autorizado tienen acceso.'
 
                 });
 
@@ -1932,7 +1948,7 @@ client.on('interactionCreate', async interaction => {
             }
 
             setTimeout(
-                async () => {
+                async function() {
 
                     ticketsBD.delete(
                         channel.id
@@ -1940,7 +1956,7 @@ client.on('interactionCreate', async interaction => {
 
                     await channel
                         .delete()
-                        .catch(() => {});
+                        .catch(function() {});
 
                 },
                 5000
@@ -1956,4 +1972,3 @@ client.on('interactionCreate', async interaction => {
 client.login(
     process.env.TOKEN
 );
-```
