@@ -52,20 +52,20 @@ const CANAL_RESENAS_ID = '1535036437865566348';
 const ROLE_MIDDLEMAN_ID = '1499596482322501802';
 
 const ROLES_STAFF_IDS = [
-    '1499596482322501802', // Middleman
-    '1517988091653259364', // Staff
-    '1499595987411406998', // Moderador
-    '1499606642898112612', // Administrador
-    '1499597074642243686', // Co-Owner
-    '1498106196589154334'  // Dueño
+    '1499596482322501802',
+    '1517988091653259364',
+    '1499595987411406998',
+    '1499606642898112612',
+    '1499597074642243686',
+    '1498106196589154334'
 ];
 
 const ROLES_SOPORTE_IDS = [
-    '1517988091653259364', // Staff
-    '1499595987411406998', // Moderador
-    '1499606642898112612', // Administrador
-    '1499597074642243686', // Co-Owner
-    '1498106196589154334'  // Dueño
+    '1517988091653259364',
+    '1499595987411406998',
+    '1499606642898112612',
+    '1499597074642243686',
+    '1498106196589154334'
 ];
 
 // ============================================================
@@ -96,12 +96,12 @@ const BTN_STYLE = {
 function formatearFecha(fecha) {
     const dia = String(fecha.getDate()).padStart(2, '0');
     const mes = String(fecha.getMonth() + 1).padStart(2, '0');
-    const anio = fecha.getFullYear();
+    const anio = String(fecha.getFullYear());
 
     const horas = String(fecha.getHours()).padStart(2, '0');
     const minutos = String(fecha.getMinutes()).padStart(2, '0');
 
-    return `${dia}/${mes}/${anio} ${horas}:${minutos}`;
+    return dia + '/' + mes + '/' + anio + ' ' + horas + ':' + minutos;
 }
 
 // ============================================================
@@ -120,7 +120,7 @@ function esStaff(member) {
 }
 
 // ============================================================
-// COMPROBAR STAFF SUPERIOR A MIDDLEMAN
+// COMPROBAR STAFF SUPERIOR
 // ============================================================
 
 function esStaffSuperior(member) {
@@ -140,7 +140,7 @@ function esStaffSuperior(member) {
 
 client.once('ready', async () => {
 
-    console.log(`✅ Bot conectado como: ${client.user.tag}`);
+    console.log('Bot conectado como: ' + client.user.tag);
 
     try {
 
@@ -237,10 +237,7 @@ client.once('ready', async () => {
 
     } catch (err) {
 
-        console.error(
-            '❌ Error al registrar comandos:',
-            err
-        );
+        console.error('❌ Error al registrar comandos:', err);
 
     }
 });
@@ -476,10 +473,7 @@ client.on('interactionCreate', async interaction => {
 
             }
 
-            const tienePermisoStaff =
-                esStaff(member);
-
-            if (!tienePermisoStaff) {
+            if (!esStaff(member)) {
 
                 return interaction.reply({
                     content:
@@ -496,12 +490,12 @@ client.on('interactionCreate', async interaction => {
 
             const creadorMencion =
                 datos?.creador
-                    ? `<@${datos.creador.id}>`
+                    ? '<@' + datos.creador.id + '>'
                     : 'Desconocido';
 
             const atendidoMencion =
                 datos?.reclamadoPor
-                    ? `<@${datos.reclamadoPor.id}>`
+                    ? '<@' + datos.reclamadoPor.id + '>'
                     : 'Sin reclamar';
 
             const fechaApertura =
@@ -512,7 +506,7 @@ client.on('interactionCreate', async interaction => {
             const embedLog =
                 new EmbedBuilder()
                     .setTitle(
-                        `📋 Log - ${channel.name} (Cierre Forzado)`
+                        '📋 Log - ' + channel.name + ' (Cierre Forzado)'
                     )
                     .setColor(0xE74C3C)
                     .addFields(
@@ -532,7 +526,7 @@ client.on('interactionCreate', async interaction => {
                         {
                             name: '🔒 Cerrado por',
                             value:
-                                `<@${user.id}> (Forzado)`,
+                                '<@' + user.id + '> (Forzado)',
                             inline: true
                         },
 
@@ -601,12 +595,13 @@ client.on('interactionCreate', async interaction => {
                             : 0xE74C3C
                     )
                     .setDescription(
-                        `**Juzgando a:** ${user}\n\n` +
-                        `**Resultado:** ${
+                        '**Juzgando a:** ' + user + '\n\n' +
+                        '**Resultado:** ' +
+                        (
                             esPerdonado
                                 ? 'PERDONADO 🟢'
                                 : 'NO PERDONADO 🔴'
-                        }`
+                        )
                     );
 
             return interaction.reply({
@@ -664,7 +659,9 @@ client.on('interactionCreate', async interaction => {
 
                 return interaction.reply({
                     content:
-                        `❌ Solo puedes reseñar al Middleman asignado: <@${datos.reclamadoPor.id}>.`,
+                        '❌ Solo puedes reseñar al Middleman asignado: <@' +
+                        datos.reclamadoPor.id +
+                        '>.',
                     ephemeral: true
                 });
 
@@ -736,14 +733,15 @@ client.on('interactionCreate', async interaction => {
             const embedResena =
                 new EmbedBuilder()
                     .setTitle(
-                        `⭐ Reseña Guardada (${origen})`
+                        '⭐ Reseña Guardada (' + origen + ')'
                     )
                     .setColor(0xF1C40F)
                     .setDescription(
-                        `**Cliente:** ${user}\n` +
-                        `**Middleman Reseñado:** ${objetivo}\n` +
-                        `**Calificación:** ${estrellasStr} (${estrellas}/5)\n` +
-                        `**Comentario:** ${comentario}`
+                        '**Cliente:** ' + user + '\n' +
+                        '**Middleman Reseñado:** ' + objetivo + '\n' +
+                        '**Calificación:** ' + estrellasStr +
+                        ' (' + estrellas + '/5)\n' +
+                        '**Comentario:** ' + comentario
                     )
                     .setTimestamp();
 
@@ -765,7 +763,9 @@ client.on('interactionCreate', async interaction => {
 
                 return interaction.reply({
                     content:
-                        `❌ Usa este comando únicamente en <#${CANAL_RESENAS_ID}>.`,
+                        '❌ Usa este comando únicamente en <#' +
+                        CANAL_RESENAS_ID +
+                        '>.',
                     ephemeral: true
                 });
 
@@ -781,7 +781,9 @@ client.on('interactionCreate', async interaction => {
 
                 return interaction.reply({
                     content:
-                        `ℹ️ El usuario ${usuario} aún no tiene reseñas.`
+                        'ℹ️ El usuario ' +
+                        usuario +
+                        ' aún no tiene reseñas.'
                 });
 
             }
@@ -807,15 +809,25 @@ client.on('interactionCreate', async interaction => {
                         '⭐ General';
 
                     texto +=
-                        `**${i + 1}.** [${tagOrigen}] Por <@${r.autorId}> - ${'⭐'.repeat(r.estrellas)}\n` +
-                        `> *${r.comentario}*\n\n`;
+                        '**' +
+                        (i + 1) +
+                        '.** [' +
+                        tagOrigen +
+                        '] Por <@' +
+                        r.autorId +
+                        '> - ' +
+                        '⭐'.repeat(r.estrellas) +
+                        '\n> *' +
+                        r.comentario +
+                        '*\n\n';
 
                 });
 
             const embedHistorial =
                 new EmbedBuilder()
                     .setTitle(
-                        `⭐ Historial Global de Reseñas - ${usuario.username}`
+                        '⭐ Historial Global de Reseñas - ' +
+                        usuario.username
                     )
                     .setColor(0xF1C40F)
                     .setThumbnail(
@@ -824,8 +836,12 @@ client.on('interactionCreate', async interaction => {
                         })
                     )
                     .setDescription(
-                        `**Promedio Global:** ${promedio} / 5.0 ⭐\n` +
-                        `**Total de Reseñas:** ${lista.length}\n\n` +
+                        '**Promedio Global:** ' +
+                        promedio +
+                        ' / 5.0 ⭐\n' +
+                        '**Total de Reseñas:** ' +
+                        lista.length +
+                        '\n\n' +
                         texto
                     )
                     .setFooter({
@@ -924,8 +940,17 @@ client.on('interactionCreate', async interaction => {
                         item.promedio.toFixed(1);
 
                     descripcionTop +=
-                        `${emojiMedalla} **#${index + 1}** <@${item.usuarioId}>\n` +
-                        `> **Calificación:** ${promFormat} / 5.0 ⭐ | **Reseñas:** ${item.total}\n\n`;
+                        emojiMedalla +
+                        ' **#' +
+                        (index + 1) +
+                        '** <@' +
+                        item.usuarioId +
+                        '>\n' +
+                        '> **Calificación:** ' +
+                        promFormat +
+                        ' / 5.0 ⭐ | **Reseñas:** ' +
+                        item.total +
+                        '\n\n';
 
                 }
             );
@@ -979,7 +1004,8 @@ client.on('interactionCreate', async interaction => {
             });
 
             const nombreCanal =
-                `ticket-middleman-${contadorMiddleman++}`;
+                'ticket-middleman-' +
+                contadorMiddleman++;
 
             const permissionOverwrites = [
 
@@ -1080,7 +1106,8 @@ client.on('interactionCreate', async interaction => {
                         )
                         .setColor(0x2ECC71)
                         .setDescription(
-                            `${user} abrió un ticket para **middleman**. Un miembro del staff te atenderá en breve.`
+                            user +
+                            ' abrió un ticket para **middleman**. Un miembro del staff te atenderá en breve.'
                         )
                         .setFooter({
                             text:
@@ -1092,14 +1119,18 @@ client.on('interactionCreate', async interaction => {
                     ROLES_STAFF_IDS
                         .map(
                             id =>
-                                `<@&${id}>`
+                                '<@&' +
+                                id +
+                                '>'
                         )
                         .join(' ');
 
                 await ticketChannel.send({
 
                     content:
-                        `${user} ${mencionesRoles}`,
+                        user +
+                        ' ' +
+                        mencionesRoles,
 
                     embeds: [
                         embedBienvenida
@@ -1114,7 +1145,8 @@ client.on('interactionCreate', async interaction => {
                 return interaction.editReply({
 
                     content:
-                        `✅ Ticket creado en: ${ticketChannel}`
+                        '✅ Ticket creado en: ' +
+                        ticketChannel
 
                 });
 
@@ -1185,7 +1217,10 @@ client.on('interactionCreate', async interaction => {
                 detallesCategorias[customId];
 
             const nombreCanal =
-                `ticket-${info.nombre}-${contadorSoporte++}`;
+                'ticket-' +
+                info.nombre +
+                '-' +
+                contadorSoporte++;
 
             const permissionOverwrites = [
 
@@ -1289,11 +1324,16 @@ client.on('interactionCreate', async interaction => {
                 const embedBienvenida =
                     new EmbedBuilder()
                         .setTitle(
-                            `${info.emoji} ${info.titulo}`
+                            info.emoji +
+                            ' ' +
+                            info.titulo
                         )
                         .setColor(info.color)
                         .setDescription(
-                            `${user} abrió un ticket para **${info.nombre}**. Un miembro del staff te atenderá en breve.`
+                            user +
+                            ' abrió un ticket para **' +
+                            info.nombre +
+                            '**. Un miembro del staff te atenderá en breve.'
                         )
                         .setFooter({
                             text:
@@ -1305,14 +1345,18 @@ client.on('interactionCreate', async interaction => {
                     ROLES_SOPORTE_IDS
                         .map(
                             id =>
-                                `<@&${id}>`
+                                '<@&' +
+                                id +
+                                '>'
                         )
                         .join(' ');
 
                 await ticketChannel.send({
 
                     content:
-                        `${user} ${mencionesRoles}`,
+                        user +
+                        ' ' +
+                        mencionesRoles,
 
                     embeds: [
                         embedBienvenida
@@ -1327,7 +1371,10 @@ client.on('interactionCreate', async interaction => {
                 return interaction.editReply({
 
                     content:
-                        `✅ Ticket de ${info.nombre} creado en: ${ticketChannel}`
+                        '✅ Ticket de ' +
+                        info.nombre +
+                        ' creado en: ' +
+                        ticketChannel
 
                 });
 
@@ -1440,7 +1487,9 @@ client.on('interactionCreate', async interaction => {
                 return interaction.reply({
 
                     content:
-                        `⚠️ Este ticket ya fue reclamado por ${datos.reclamadoPor}.`,
+                        '⚠️ Este ticket ya fue reclamado por ' +
+                        datos.reclamadoPor +
+                        '.',
 
                     ephemeral: true
 
@@ -1503,6 +1552,9 @@ client.on('interactionCreate', async interaction => {
                         const rolId
                         of ROLES_STAFF_IDS
                     ) {
+
+                        // ROL 1517988091653259364
+                        // MANTIENE ACCESO AL TICKET
 
                         if (
                             rolId ===
@@ -1598,8 +1650,10 @@ client.on('interactionCreate', async interaction => {
                     return channel.send({
 
                         content:
-                            `📌 **Ticket reclamado por ${user}.**\n` +
-                            `👥 El ticket continúa visible para todo el Staff autorizado.`
+                            '📌 **Ticket reclamado por ' +
+                            user +
+                            '.**\n' +
+                            '👥 El ticket continúa visible para todo el Staff autorizado.'
 
                     });
 
@@ -1608,8 +1662,10 @@ client.on('interactionCreate', async interaction => {
                 return channel.send({
 
                     content:
-                        `📌 **Reclamado por ${user}.**\n` +
-                        `🔒 Solo el creador, el miembro del Staff que reclamó y el rol Staff autorizado tienen acceso.`
+                        '📌 **Reclamado por ' +
+                        user +
+                        '.**\n' +
+                        '🔒 Solo el creador, el miembro del Staff que reclamó y el rol Staff autorizado tienen acceso.'
 
                 });
 
@@ -1682,7 +1738,11 @@ client.on('interactionCreate', async interaction => {
                 return interaction.reply({
 
                     content:
-                        `⚠️ **ESPERA** Antes de cerrar el ticket, <@${datos.creador.id}> debe reseñar a: <@${datos.reclamadoPor.id}>`,
+                        '⚠️ **ESPERA** Antes de cerrar el ticket, <@' +
+                        datos.creador.id +
+                        '> debe reseñar a: <@' +
+                        datos.reclamadoPor.id +
+                        '>',
 
                     ephemeral: false
 
@@ -1778,7 +1838,9 @@ client.on('interactionCreate', async interaction => {
                 return interaction.reply({
 
                     content:
-                        `⚠️ <@${datos.creador.id}> todavía debe realizar la reseña.`,
+                        '⚠️ <@' +
+                        datos.creador.id +
+                        '> todavía debe realizar la reseña.',
 
                     ephemeral: true
 
@@ -1798,7 +1860,8 @@ client.on('interactionCreate', async interaction => {
             const embedLog =
                 new EmbedBuilder()
                     .setTitle(
-                        `📋 Log - ${channel.name}`
+                        '📋 Log - ' +
+                        channel.name
                     )
                     .setColor(0x2ECC71)
                     .addFields(
@@ -1806,21 +1869,27 @@ client.on('interactionCreate', async interaction => {
                         {
                             name: '👤 Creador',
                             value:
-                                `<@${datos.creador.id}>`,
+                                '<@' +
+                                datos.creador.id +
+                                '>',
                             inline: true
                         },
 
                         {
                             name: '📌 Atendido por',
                             value:
-                                `<@${datos.reclamadoPor.id}>`,
+                                '<@' +
+                                datos.reclamadoPor.id +
+                                '>',
                             inline: true
                         },
 
                         {
                             name: '🔒 Cerrado por',
                             value:
-                                `<@${user.id}>`,
+                                '<@' +
+                                user.id +
+                                '>',
                             inline: true
                         },
 
