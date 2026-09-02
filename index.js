@@ -432,9 +432,9 @@ client.on('interactionCreate', async function(interaction) {
 
                 return interaction.reply({
                     content:
-                        '✅ ' +
-                        usuarioAAñadir +
-                        ' ha sido añadido al ticket.'
+                        '✅ <@' +
+                        usuarioAAñadir.id +
+                        '> ha sido añadido al ticket.'
                 });
 
             } catch (err) {
@@ -605,8 +605,9 @@ client.on('interactionCreate', async function(interaction) {
                     )
                     .setDescription(
                         '**Juzgando a:** ' +
-                        user +
-                        '\n\n' +
+                        '<@' +
+                        user.id +
+                        '>\n\n' +
                         '**Resultado:** ' +
                         resultado
                     );
@@ -744,12 +745,12 @@ client.on('interactionCreate', async function(interaction) {
                     )
                     .setColor(0xF1C40F)
                     .setDescription(
-                        '**Cliente:** ' +
-                        user +
-                        '\n' +
-                        '**Middleman Reseñado:** ' +
-                        objetivo +
-                        '\n' +
+                        '**Cliente:** <@' +
+                        user.id +
+                        '>\n' +
+                        '**Middleman Reseñado:** <@' +
+                        objetivo.id +
+                        '>\n' +
                         '**Calificación:** ' +
                         estrellasStr +
                         ' (' +
@@ -795,9 +796,9 @@ client.on('interactionCreate', async function(interaction) {
 
                 return interaction.reply({
                     content:
-                        'ℹ️ El usuario ' +
-                        usuario +
-                        ' aún no tiene reseñas.'
+                        'ℹ️ El usuario <@' +
+                        usuario.id +
+                        '> aún no tiene reseñas.'
                 });
 
             }
@@ -1120,8 +1121,9 @@ client.on('interactionCreate', async function(interaction) {
                         )
                         .setColor(0x2ECC71)
                         .setDescription(
-                            user +
-                            ' abrió un ticket para **middleman**. Un miembro del staff te atenderá en breve.'
+                            '<@' +
+                            user.id +
+                            '> abrió un ticket para **middleman**. Un miembro del staff te atenderá en breve.'
                         )
                         .setFooter({
                             text:
@@ -1141,8 +1143,9 @@ client.on('interactionCreate', async function(interaction) {
                 await ticketChannel.send({
 
                     content:
-                        user +
-                        ' ' +
+                        '<@' +
+                        user.id +
+                        '> ' +
                         mencionesRoles,
 
                     embeds: [
@@ -1158,8 +1161,9 @@ client.on('interactionCreate', async function(interaction) {
                 return interaction.editReply({
 
                     content:
-                        '✅ Ticket creado en: ' +
-                        ticketChannel
+                        '✅ Ticket creado en: <#' +
+                        ticketChannel.id +
+                        '>'
 
                 });
 
@@ -1343,8 +1347,9 @@ client.on('interactionCreate', async function(interaction) {
                         )
                         .setColor(info.color)
                         .setDescription(
-                            user +
-                            ' abrió un ticket para **' +
+                            '<@' +
+                            user.id +
+                            '> abrió un ticket para **' +
                             info.nombre +
                             '**. Un miembro del staff te atenderá en breve.'
                         )
@@ -1366,8 +1371,9 @@ client.on('interactionCreate', async function(interaction) {
                 await ticketChannel.send({
 
                     content:
-                        user +
-                        ' ' +
+                        '<@' +
+                        user.id +
+                        '> ' +
                         mencionesRoles,
 
                     embeds: [
@@ -1385,8 +1391,9 @@ client.on('interactionCreate', async function(interaction) {
                     content:
                         '✅ Ticket de ' +
                         info.nombre +
-                        ' creado en: ' +
-                        ticketChannel
+                        ' creado en: <#' +
+                        ticketChannel.id +
+                        '>'
 
                 });
 
@@ -1501,9 +1508,9 @@ client.on('interactionCreate', async function(interaction) {
                 return interaction.reply({
 
                     content:
-                        '⚠️ Este ticket ya fue reclamado por ' +
-                        datos.reclamadoPor +
-                        '.',
+                        '⚠️ Este ticket ya fue reclamado por <@' +
+                        datos.reclamadoPor.id +
+                        '>.',
 
                     ephemeral: true
 
@@ -1566,11 +1573,6 @@ client.on('interactionCreate', async function(interaction) {
                         const rolId
                         of ROLES_STAFF_IDS
                     ) {
-
-                        /*
-                         * EL ROL 1517988091653259364
-                         * MANTIENE ACCESO AL TICKET.
-                         */
 
                         if (
                             rolId ===
@@ -1666,9 +1668,9 @@ client.on('interactionCreate', async function(interaction) {
                     return channel.send({
 
                         content:
-                            '📌 **Ticket reclamado por ' +
-                            user +
-                            '.**\n' +
+                            '📌 **Ticket reclamado por <@' +
+                            user.id +
+                            '>.**\n' +
                             '👥 El ticket continúa visible para todo el Staff autorizado.'
 
                     });
@@ -1678,9 +1680,9 @@ client.on('interactionCreate', async function(interaction) {
                 return channel.send({
 
                     content:
-                        '📌 **Reclamado por ' +
-                        user +
-                        '.**\n' +
+                        '📌 **Reclamado por <@' +
+                        user.id +
+                        '>.**\n' +
                         '🔒 Solo el creador, el miembro que reclamó y el rol Staff autorizado tienen acceso.'
 
                 });
