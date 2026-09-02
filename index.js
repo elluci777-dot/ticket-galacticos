@@ -1,4 +1,3 @@
-```js
 require('dotenv').config();
 
 const {
@@ -1093,113 +1092,49 @@ client.on('interactionCreate', async interaction => {
                         .setTimestamp();
 
                 const mencionesRoles =
-                    ROLES_STAFF_IDS
-                        .map(
-                            id =>
-                                `<@&${id}>`
-                        )
-                        .join(' ');
+                    ROLES_STAFF_IDS.map(id => `<@&${id}>`).join(' ');
 
                 await ticketChannel.send({
-
-                    content:
-                        `${user} ${mencionesRoles}`,
-
-                    embeds: [
-                        embedBienvenida
-                    ],
-
-                    components: [
-                        filaBotonesTicket
-                    ]
-
+                    content: `${user} ${mencionesRoles}`,
+                    embeds: [embedBienvenida],
+                    components: [filaBotonesTicket]
                 });
 
                 return interaction.editReply({
-
-                    content:
-                        `✅ Ticket creado en: ${ticketChannel}`
-
+                    content: `✅ Tu ticket ha sido creado: ${ticketChannel}`
                 });
 
             } catch (err) {
-
                 console.error(err);
-
                 return interaction.editReply({
-
-                    content:
-                        '❌ Error al crear canal.'
-
+                    content: '❌ Hubo un error al crear el ticket.'
                 });
-
             }
         }
 
         // ====================================================
-        // CREAR TICKET SOPORTE
+        // CREAR TICKET SOPORTE / OTROS
         // ====================================================
 
         if (
-            [
-                'ticket_soporte',
-                'ticket_pregunta',
-                'ticket_ayuda',
-                'ticket_reportar'
-            ].includes(customId)
+            customId === 'ticket_soporte' ||
+            customId === 'ticket_pregunta' ||
+            customId === 'ticket_ayuda' ||
+            customId === 'ticket_reportar'
         ) {
 
             await interaction.deferReply({
                 ephemeral: true
             });
 
-            const detallesCategorias = {
-
-                ticket_soporte: {
-                    nombre: 'soporte',
-                    emoji: '🎫',
-                    titulo: 'Ticket de SOPORTE',
-                    color: 0xE74C3C
-                },
-
-                ticket_pregunta: {
-                    nombre: 'pregunta',
-                    emoji: '❓',
-                    titulo: 'Ticket de PREGUNTA',
-                    color: 0x3498DB
-                },
-
-                ticket_ayuda: {
-                    nombre: 'ayuda',
-                    emoji: '⚠️',
-                    titulo: 'Ticket de AYUDA',
-                    color: 0x2ECC71
-                },
-
-                ticket_reportar: {
-                    nombre: 'reportar',
-                    emoji: '🚨',
-                    titulo: 'Ticket de REPORTE',
-                    color: 0x95A5A6
-                }
-
-            };
-
-            const info =
-                detallesCategorias[customId];
-
-            const nombreCanal =
-                `ticket-${info.nombre}-${contadorSoporte++}`;
+            const tipoTicket = customId.replace('ticket_', '');
+            const nombreCanal = `ticket-${tipoTicket}-${contadorSoporte++}`;
 
             const permissionOverwrites = [
-
                 {
                     id: guild.roles.everyone.id,
-                    deny: [
-                        PermissionFlagsBits.ViewChannel
-                    ]
+                    deny: [PermissionFlagsBits.ViewChannel]
                 },
-
                 {
                     id: user.id,
                     allow: [
@@ -1207,145 +1142,74 @@ client.on('interactionCreate', async interaction => {
                         PermissionFlagsBits.SendMessages,
                         PermissionFlagsBits.AttachFiles
                     ]
-                },
-
-                {
-                    id: ROLE_MIDDLEMAN_ID,
-                    deny: [
-                        PermissionFlagsBits.ViewChannel
-                    ]
                 }
-
             ];
 
-            ROLES_SOPORTE_IDS.forEach(
-                rolId => {
-
-                    permissionOverwrites.push({
-
-                        id: rolId,
-
-                        allow: [
-                            PermissionFlagsBits.ViewChannel,
-                            PermissionFlagsBits.SendMessages,
-                            PermissionFlagsBits.AttachFiles
-                        ]
-
-                    });
-
-                }
-            );
+            ROLES_SOPORTE_IDS.forEach(rolId => {
+                permissionOverwrites.push({
+                    id: rolId,
+                    allow: [
+                        PermissionFlagsBits.ViewChannel,
+                        PermissionFlagsBits.SendMessages,
+                        PermissionFlagsBits.AttachFiles
+                    ]
+                });
+            });
 
             try {
 
-                const ticketChannel =
-                    await guild.channels.create({
+                const ticketChannel = await guild.channels.create({
+                    name: nombreCanal,
+                    type: 0,
+                    permissionOverwrites
+                });
 
-                        name: nombreCanal,
-                        type: 0,
-                        permissionOverwrites
+                ticketsBD.set(ticketChannel.id, {
+                    tipo: tipoTicket,
+                    creador: user,
+                    reclamadoPor: null,
+                    fechaApertura: new Date(),
+                    resenaHecha: false
+                });
 
-                    });
+                const filaBotonesTicket = new ActionRowBuilder()
+                    .addComponents(
+                        new ButtonBuilder()
+                            .setCustomId('btn_reclamar')
+                            .setLabel('Reclamar Ticket')
+                            .setEmoji('📜')
+                            .setStyle(BTN_STYLE.SECONDARY),
+                        new ButtonBuilder()
+                            .setCustomId('btn_cerrar')
+                            .setLabel('Cerrar Ticket')
+                            .setEmoji('🔒')
+                            .setStyle(BTN_STYLE.DANGER)
+                    );
 
-                ticketsBD.set(
-                    ticketChannel.id,
-                    {
+                const embedBienvenida = new EmbedBuilder()
+                    .setTitle(`🎟️ Ticket de Soporte (${tipoTicket.toUpperCase()})`)
+                    .setColor(0x3498DB)
+                    .setDescription(`${user} abrió un ticket de tipo **${tipoTicket}**. El equipo de soporte te atenderá en breve.`)
+                    .setFooter({ text: 'Sistema de Soporte' })
+                    .setTimestamp();
 
-                        tipo: info.nombre,
-                        creador: user,
-                        reclamadoPor: null,
-                        fechaApertura: new Date(),
-                        resenaHecha: true
-
-                    }
-                );
-
-                const filaBotonesTicket =
-                    new ActionRowBuilder()
-                        .addComponents(
-
-                            new ButtonBuilder()
-                                .setCustomId(
-                                    'btn_reclamar'
-                                )
-                                .setLabel(
-                                    'Reclamar Ticket'
-                                )
-                                .setEmoji('📜')
-                                .setStyle(
-                                    BTN_STYLE.SECONDARY
-                                ),
-
-                            new ButtonBuilder()
-                                .setCustomId(
-                                    'btn_cerrar'
-                                )
-                                .setLabel(
-                                    'Cerrar Ticket'
-                                )
-                                .setEmoji('🔒')
-                                .setStyle(
-                                    BTN_STYLE.DANGER
-                                )
-
-                        );
-
-                const embedBienvenida =
-                    new EmbedBuilder()
-                        .setTitle(
-                            `${info.emoji} ${info.titulo}`
-                        )
-                        .setColor(info.color)
-                        .setDescription(
-                            `${user} abrió un ticket para **${info.nombre}**. Un miembro del staff te atenderá en breve.`
-                        )
-                        .setFooter({
-                            text:
-                                'Sistema de Soporte'
-                        })
-                        .setTimestamp();
-
-                const mencionesRoles =
-                    ROLES_SOPORTE_IDS
-                        .map(
-                            id =>
-                                `<@&${id}>`
-                        )
-                        .join(' ');
+                const mencionesSoporte = ROLES_SOPORTE_IDS.map(id => `<@&${id}>`).join(' ');
 
                 await ticketChannel.send({
-
-                    content:
-                        `${user} ${mencionesRoles}`,
-
-                    embeds: [
-                        embedBienvenida
-                    ],
-
-                    components: [
-                        filaBotonesTicket
-                    ]
-
+                    content: `${user} ${mencionesSoporte}`,
+                    embeds: [embedBienvenida],
+                    components: [filaBotonesTicket]
                 });
 
                 return interaction.editReply({
-
-                    content:
-                        `✅ Ticket de ${info.nombre} creado en: ${ticketChannel}`
-
+                    content: `✅ Tu ticket ha sido creado: ${ticketChannel}`
                 });
 
             } catch (err) {
-
                 console.error(err);
-
                 return interaction.editReply({
-
-                    content:
-                        '❌ Error al crear el canal de ticket.'
-
+                    content: '❌ Hubo un error al crear el ticket.'
                 });
-
             }
         }
 
@@ -1353,277 +1217,51 @@ client.on('interactionCreate', async interaction => {
         // RECLAMAR TICKET
         // ====================================================
 
-        if (
-            customId ===
-            'btn_reclamar'
-        ) {
+        if (customId === 'btn_reclamar') {
 
-            const datos =
-                ticketsBD.get(channel.id);
-
-            if (!datos) {
-
+            if (!esStaff(member)) {
                 return interaction.reply({
-
-                    content:
-                        '❌ Datos de ticket no encontrados.',
-
+                    content: '❌ Solo el Staff puede reclamar tickets.',
                     ephemeral: true
-
                 });
-
             }
 
-            // =================================================
-            // COMPROBAR QUIÉN PUEDE RECLAMAR
-            // =================================================
-
-            const esAdministrador =
-                member.permissions.has(
-                    PermissionFlagsBits.Administrator
-                );
-
-            const tieneRolStaff =
-                ROLES_STAFF_IDS.some(
-                    rolId =>
-                        member.roles.cache.has(rolId)
-                );
-
-            if (
-                !tieneRolStaff &&
-                !esAdministrador
-            ) {
-
+            const datos = ticketsBD.get(channel.id);
+            if (datos && datos.reclamadoPor) {
                 return interaction.reply({
-
-                    content:
-                        '❌ No tienes permiso para reclamar este ticket.',
-
+                    content: `❌ Este ticket ya fue reclamado por <@${datos.reclamadoPor.id}>.`,
                     ephemeral: true
-
                 });
-
             }
 
-            // =================================================
-            // COMPROBAR TIPO DE TICKET
-            // =================================================
-
-            const esTicketSoporte = [
-
-                'soporte',
-                'pregunta',
-                'ayuda',
-                'reportar'
-
-            ].includes(datos.tipo);
-
-            const esMiddleman =
-                member.roles.cache.has(
-                    ROLE_MIDDLEMAN_ID
-                );
-
-            const tieneRolSuperior =
-                ROLES_SOPORTE_IDS.some(
-                    rolId =>
-                        member.roles.cache.has(rolId)
-                );
-
-            if (
-                esTicketSoporte &&
-                esMiddleman &&
-                !tieneRolSuperior &&
-                !esAdministrador
-            ) {
-
-                return interaction.reply({
-
-                    content:
-                        '❌ Los Middleman sin un rol superior solo pueden reclamar tickets de **Middleman**.',
-
-                    ephemeral: true
-
-                });
-
+            if (datos) {
+                datos.reclamadoPor = user;
             }
-
-            // =================================================
-            // COMPROBAR SI YA FUE RECLAMADO
-            // =================================================
-
-            if (datos.reclamadoPor) {
-
-                return interaction.reply({
-
-                    content:
-                        `⚠️ Este ticket ya fue reclamado por ${datos.reclamadoPor}.`,
-
-                    ephemeral: true
-
-                });
-
-            }
-
-            datos.reclamadoPor =
-                user;
 
             try {
-
-                // =================================================
-                // OCULTAR TODOS LOS ROLES STAFF
-                // =================================================
-
-                for (
-                    const rolId
-                    of ROLES_STAFF_IDS
-                ) {
-
-                    await channel.permissionOverwrites.edit(
-                        rolId,
-                        {
-                            ViewChannel: false
-                        }
-                    ).catch(() => {});
-
-                }
-
-                // =================================================
-                // TICKET DE SOPORTE
-                // =================================================
-
-                if (esTicketSoporte) {
-
-                    // Middleman no puede ver soporte
-                    await channel.permissionOverwrites.edit(
-                        ROLE_MIDDLEMAN_ID,
-                        {
-                            ViewChannel: false
-                        }
-                    ).catch(() => {});
-
-                }
-
-                // =================================================
-                // DAR ACCESO AL STAFF AUTORIZADO
-                // =================================================
-
-                await channel.permissionOverwrites.edit(
-                    ROLE_STAFF_TICKETS_ID,
-                    {
+                // Modificar permisos del canal para que solo el staff asignado/superior y el creador tengan acceso
+                if (datos && datos.creador) {
+                    await channel.permissionOverwrites.edit(user.id, {
                         ViewChannel: true,
                         SendMessages: true,
                         AttachFiles: true
-                    }
-                ).catch(() => {});
-
-                // =================================================
-                // SI ES MIDDLEMAN, DAR ACCESO AL ROL MIDDLEMAN
-                // =================================================
-
-                if (
-                    datos.tipo === 'middleman'
-                ) {
-
-                    await channel.permissionOverwrites.edit(
-                        ROLE_MIDDLEMAN_ID,
-                        {
-                            ViewChannel: true,
-                            SendMessages: true,
-                            AttachFiles: true
-                        }
-                    ).catch(() => {});
-
-                }
-
-                // =================================================
-                // DAR ACCESO AL CREADOR
-                // =================================================
-
-                await channel.permissionOverwrites.edit(
-                    datos.creador.id,
-                    {
-                        ViewChannel: true,
-                        SendMessages: true,
-                        AttachFiles: true
-                    }
-                ).catch(() => {});
-
-                // =================================================
-                // ACTUALIZAR BOTÓN
-                // =================================================
-
-                const filaActualizada =
-                    new ActionRowBuilder()
-                        .addComponents(
-
-                            new ButtonBuilder()
-                                .setCustomId(
-                                    'btn_reclamar'
-                                )
-                                .setLabel(
-                                    'Ticket Reclamado'
-                                )
-                                .setEmoji('📜')
-                                .setStyle(
-                                    BTN_STYLE.SECONDARY
-                                )
-                                .setDisabled(true),
-
-                            new ButtonBuilder()
-                                .setCustomId(
-                                    'btn_cerrar'
-                                )
-                                .setLabel(
-                                    'Cerrar Ticket'
-                                )
-                                .setEmoji('🔒')
-                                .setStyle(
-                                    BTN_STYLE.DANGER
-                                )
-
-                        );
-
-                await interaction.update({
-
-                    components: [
-                        filaActualizada
-                    ]
-
-                });
-
-                // =================================================
-                // MENSAJE
-                // =================================================
-
-                if (
-                    datos.tipo === 'middleman'
-                ) {
-
-                    return channel.send({
-
-                        content:
-                            `📌 **Ticket reclamado por ${user}.**\n` +
-                            `🔒 Acceso: creador, <@&${ROLE_STAFF_TICKETS_ID}> y <@&${ROLE_MIDDLEMAN_ID}>.`
-
                     });
-
                 }
 
-                return channel.send({
+                const embedReclamado = new EmbedBuilder()
+                    .setColor(0x2ECC71)
+                    .setDescription(`📌 **Ticket reclamado por:** ${user}`);
 
-                    content:
-                        `📌 **Ticket reclamado por ${user}.**\n` +
-                        `🔒 Acceso: creador y <@&${ROLE_STAFF_TICKETS_ID}>.`
-
+                return interaction.reply({
+                    embeds: [embedReclamado]
                 });
 
-            } catch (error) {
-
-                console.error(
-                    '❌ Error al reclamar ticket:',
-                    error
-                );
-
+            } catch (err) {
+                console.error(err);
+                return interaction.reply({
+                    content: '❌ Hubo un error al reclamar el ticket.',
+                    ephemeral: true
+                });
             }
         }
 
@@ -1631,276 +1269,52 @@ client.on('interactionCreate', async interaction => {
         // CERRAR TICKET
         // ====================================================
 
-        if (
-            customId ===
-            'btn_cerrar'
-        ) {
+        if (customId === 'btn_cerrar') {
 
-            const datos =
-                ticketsBD.get(channel.id);
+            const datos = ticketsBD.get(channel.id);
+            const esCreador = datos && datos.creador && user.id === datos.creador.id;
 
-            if (!datos) {
-
+            if (!esStaff(member) && !esCreador) {
                 return interaction.reply({
-
-                    content:
-                        '❌ Datos no encontrados.',
-
+                    content: '❌ No tienes permisos para cerrar este ticket.',
                     ephemeral: true
-
                 });
-
             }
 
-            // =================================================
-            // SOLO MIDDLEMAN O SUPERIOR
-            // =================================================
-
-            if (!esStaff(member)) {
-
-                return interaction.reply({
-
-                    content:
-                        '❌ Solo un **Middleman o superior** puede cerrar tickets.',
-
-                    ephemeral: true
-
-                });
-
-            }
-
-            if (!datos.reclamadoPor) {
-
-                return interaction.reply({
-
-                    content:
-                        '⚠️ Un encargado debe reclamar el ticket antes de cerrarlo.',
-
-                    ephemeral: true
-
-                });
-
-            }
-
-            // =================================================
-            // RESEÑA OBLIGATORIA PARA MIDDLEMAN
-            // =================================================
-
-            if (
-                datos.tipo === 'middleman' &&
-                !datos.resenaHecha
-            ) {
-
-                return interaction.reply({
-
-                    content:
-                        `⚠️ **ESPERA** Antes de cerrar el ticket, <@${datos.creador.id}> debe reseñar a: <@${datos.reclamadoPor.id}>`,
-
-                    ephemeral: false
-
-                });
-
-            }
-
-            const btnConfirmar =
-                new ActionRowBuilder()
-                    .addComponents(
-
-                        new ButtonBuilder()
-                            .setCustomId(
-                                'btn_confirmar_cierre'
-                            )
-                            .setLabel(
-                                '⚠️ Confirmar Cierre'
-                            )
-                            .setStyle(
-                                BTN_STYLE.DANGER
-                            )
-
-                    );
-
-            return interaction.reply({
-
-                content:
-                    '¿Estás seguro de cerrar este ticket?',
-
-                components: [
-                    btnConfirmar
-                ]
-
-            });
-        }
-
-        // ====================================================
-        // CONFIRMAR CIERRE
-        // ====================================================
-
-        if (
-            customId ===
-            'btn_confirmar_cierre'
-        ) {
-
-            const datos =
-                ticketsBD.get(channel.id);
-
-            if (!datos) {
-
-                return interaction.reply({
-
-                    content:
-                        '❌ Datos del ticket no encontrados.',
-
-                    ephemeral: true
-
-                });
-
-            }
-
-            // =================================================
-            // VOLVER A COMPROBAR PERMISOS
-            // =================================================
-
-            if (!esStaff(member)) {
-
-                return interaction.reply({
-
-                    content:
-                        '❌ Solo un **Middleman o superior** puede cerrar tickets.',
-
-                    ephemeral: true
-
-                });
-
-            }
-
-            if (!datos.reclamadoPor) {
-
-                return interaction.reply({
-
-                    content:
-                        '❌ El ticket no tiene un encargado.',
-
-                    ephemeral: true
-
-                });
-
-            }
-
-            if (
-                datos.tipo === 'middleman' &&
-                !datos.resenaHecha
-            ) {
-
-                return interaction.reply({
-
-                    content:
-                        `⚠️ <@${datos.creador.id}> todavía debe realizar la reseña.`,
-
-                    ephemeral: true
-
-                });
-
-            }
-
-            await interaction.update({
-
-                content:
-                    '🔒 Guardando log y cerrando en 5s...',
-
-                components: []
-
+            await interaction.reply({
+                content: '🔒 **Cerrando ticket...** Guardando log y borrando canal en 5 segundos...'
             });
 
-            const embedLog =
-                new EmbedBuilder()
-                    .setTitle(
-                        `📋 Log - ${channel.name}`
-                    )
-                    .setColor(0x2ECC71)
-                    .addFields(
+            const creadorMencion = datos?.creador ? `<@${datos.creador.id}>` : 'Desconocido';
+            const atendidoMencion = datos?.reclamadoPor ? `<@${datos.reclamadoPor.id}>` : 'Sin reclamar';
+            const fechaApertura = datos?.fechaApertura ? formatearFecha(datos.fechaApertura) : 'Desconocida';
 
-                        {
-                            name: '👤 Creador',
-                            value:
-                                `<@${datos.creador.id}>`,
-                            inline: true
-                        },
+            const embedLog = new EmbedBuilder()
+                .setTitle(`📋 Log - ${channel.name}`)
+                .setColor(0x3498DB)
+                .addFields(
+                    { name: '👤 Creador', value: creadorMencion, inline: true },
+                    { name: '📌 Atendido por', value: atendidoMencion, inline: true },
+                    { name: '🔒 Cerrado por', value: `<@${user.id}>`, inline: true },
+                    { name: '🕒 Creado', value: fechaApertura, inline: false },
+                    { name: '⏰ Cerrado', value: formatearFecha(new Date()), inline: false }
+                )
+                .setFooter({ text: 'Sistema de Tickets' })
+                .setTimestamp();
 
-                        {
-                            name: '📌 Atendido por',
-                            value:
-                                `<@${datos.reclamadoPor.id}>`,
-                            inline: true
-                        },
-
-                        {
-                            name: '🔒 Cerrado por',
-                            value:
-                                `<@${user.id}>`,
-                            inline: true
-                        },
-
-                        {
-                            name: '🕒 Creado',
-                            value:
-                                formatearFecha(
-                                    datos.fechaApertura
-                                ),
-                            inline: false
-                        },
-
-                        {
-                            name: '⏰ Cerrado',
-                            value:
-                                formatearFecha(
-                                    new Date()
-                                ),
-                            inline: false
-                        }
-
-                    )
-                    .setTimestamp();
-
-            const canalLogs =
-                guild.channels.cache.get(
-                    CANAL_LOGS_ID
-                );
-
+            const canalLogs = guild.channels.cache.get(CANAL_LOGS_ID);
             if (canalLogs) {
-
-                await canalLogs.send({
-
-                    embeds: [
-                        embedLog
-                    ]
-
-                });
-
+                await canalLogs.send({ embeds: [embedLog] }).catch(() => {});
             }
 
-            setTimeout(
-                async () => {
+            setTimeout(async () => {
+                ticketsBD.delete(channel.id);
+                await channel.delete().catch(() => {});
+            }, 5000);
 
-                    ticketsBD.delete(
-                        channel.id
-                    );
-
-                    await channel
-                        .delete()
-                        .catch(() => {});
-
-                },
-                5000
-            );
+            return;
         }
     }
 });
 
-// ============================================================
-// LOGIN
-// ============================================================
-
-client.login(
-    process.env.TOKEN
-);
-```
+client.login(process.env.TOKEN);
