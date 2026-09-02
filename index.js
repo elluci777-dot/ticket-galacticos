@@ -1,3 +1,4 @@
+```js
 require('dotenv').config();
 
 const {
@@ -1503,13 +1504,35 @@ client.on('interactionCreate', async interaction => {
                         of ROLES_STAFF_IDS
                     ) {
 
-                        await channel.permissionOverwrites.edit(
-                            rolId,
-                            {
-                                ViewChannel: false
-                            }
-                        ).catch(() => {});
+                        // =================================================
+                        // EL ROL STAFF 1517988091653259364
+                        // MANTIENE ACCESO AL TICKET
+                        // =================================================
 
+                        if (
+                            rolId ===
+                            '1517988091653259364'
+                        ) {
+
+                            await channel.permissionOverwrites.edit(
+                                rolId,
+                                {
+                                    ViewChannel: true,
+                                    SendMessages: true,
+                                    AttachFiles: true
+                                }
+                            ).catch(() => {});
+
+                        } else {
+
+                            await channel.permissionOverwrites.edit(
+                                rolId,
+                                {
+                                    ViewChannel: false
+                                }
+                            ).catch(() => {});
+
+                        }
                     }
 
                     await channel.permissionOverwrites.edit(
@@ -1591,7 +1614,7 @@ client.on('interactionCreate', async interaction => {
 
                     content:
                         `📌 **Reclamado por ${user}.**\n` +
-                        `🔒 Solo el creador y el miembro del Staff que reclamó tienen acceso.`
+                        `🔒 Solo el creador, el miembro del Staff que reclamó y el rol Staff autorizado tienen acceso.`
 
                 });
 
@@ -1881,3 +1904,4 @@ client.on('interactionCreate', async interaction => {
 client.login(
     process.env.TOKEN
 );
+```
