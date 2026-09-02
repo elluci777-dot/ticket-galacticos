@@ -1,3 +1,4 @@
+```js
 require('dotenv').config();
 
 const {
@@ -49,6 +50,10 @@ const CANAL_RESENAS_ID = '1535036437865566348';
 // ============================================================
 
 const ROLE_MIDDLEMAN_ID = '1499596482322501802';
+
+// Este rol será el único rol de Staff que podrá
+// continuar viendo los tickets reclamados.
+const ROLE_STAFF_TICKETS_ID = '1517988091653259364';
 
 const ROLES_STAFF_IDS = [
     '1499596482322501802', // Middleman
@@ -1369,6 +1374,10 @@ client.on('interactionCreate', async interaction => {
 
             }
 
+            // =================================================
+            // COMPROBAR QUIÉN PUEDE RECLAMAR
+            // =================================================
+
             const esAdministrador =
                 member.permissions.has(
                     PermissionFlagsBits.Administrator
@@ -1395,6 +1404,10 @@ client.on('interactionCreate', async interaction => {
                 });
 
             }
+
+            // =================================================
+            // COMPROBAR TIPO DE TICKET
+            // =================================================
 
             const esTicketSoporte = [
 
@@ -1434,6 +1447,10 @@ client.on('interactionCreate', async interaction => {
 
             }
 
+            // =================================================
+            // COMPROBAR SI YA FUE RECLAMADO
+            // =================================================
+
             if (datos.reclamadoPor) {
 
                 return interaction.reply({
@@ -1453,11 +1470,30 @@ client.on('interactionCreate', async interaction => {
             try {
 
                 // =================================================
-                // TICKET SOPORTE
+                // OCULTAR TODOS LOS ROLES STAFF
+                // =================================================
+
+                for (
+                    const rolId
+                    of ROLES_STAFF_IDS
+                ) {
+
+                    await channel.permissionOverwrites.edit(
+                        rolId,
+                        {
+                            ViewChannel: false
+                        }
+                    ).catch(() => {});
+
+                }
+
+                // =================================================
+                // TICKET DE SOPORTE
                 // =================================================
 
                 if (esTicketSoporte) {
 
+                    // Middleman no puede ver soporte
                     await channel.permissionOverwrites.edit(
                         ROLE_MIDDLEMAN_ID,
                         {
@@ -1465,24 +1501,31 @@ client.on('interactionCreate', async interaction => {
                         }
                     ).catch(() => {});
 
-                    for (
-                        const rolId
-                        of ROLES_SOPORTE_IDS
-                    ) {
+                }
 
-                        await channel.permissionOverwrites.edit(
-                            rolId,
-                            {
-                                ViewChannel: true,
-                                SendMessages: true,
-                                AttachFiles: true
-                            }
-                        ).catch(() => {});
+                // =================================================
+                // DAR ACCESO AL STAFF AUTORIZADO
+                // =================================================
 
+                await channel.permissionOverwrites.edit(
+                    ROLE_STAFF_TICKETS_ID,
+                    {
+                        ViewChannel: true,
+                        SendMessages: true,
+                        AttachFiles: true
                     }
+                ).catch(() => {});
+
+                // =================================================
+                // SI ES MIDDLEMAN, DAR ACCESO AL ROL MIDDLEMAN
+                // =================================================
+
+                if (
+                    datos.tipo === 'middleman'
+                ) {
 
                     await channel.permissionOverwrites.edit(
-                        datos.creador.id,
+                        ROLE_MIDDLEMAN_ID,
                         {
                             ViewChannel: true,
                             SendMessages: true,
@@ -1493,44 +1536,17 @@ client.on('interactionCreate', async interaction => {
                 }
 
                 // =================================================
-                // TICKET MIDDLEMAN
+                // DAR ACCESO AL CREADOR
                 // =================================================
 
-                else {
-
-                    for (
-                        const rolId
-                        of ROLES_STAFF_IDS
-                    ) {
-
-                        await channel.permissionOverwrites.edit(
-                            rolId,
-                            {
-                                ViewChannel: false
-                            }
-                        ).catch(() => {});
-
+                await channel.permissionOverwrites.edit(
+                    datos.creador.id,
+                    {
+                        ViewChannel: true,
+                        SendMessages: true,
+                        AttachFiles: true
                     }
-
-                    await channel.permissionOverwrites.edit(
-                        user.id,
-                        {
-                            ViewChannel: true,
-                            SendMessages: true,
-                            AttachFiles: true
-                        }
-                    ).catch(() => {});
-
-                    await channel.permissionOverwrites.edit(
-                        datos.creador.id,
-                        {
-                            ViewChannel: true,
-                            SendMessages: true,
-                            AttachFiles: true
-                        }
-                    ).catch(() => {});
-
-                }
+                ).catch(() => {});
 
                 // =================================================
                 // ACTUALIZAR BOTÓN
@@ -1575,13 +1591,19 @@ client.on('interactionCreate', async interaction => {
 
                 });
 
-                if (esTicketSoporte) {
+                // =================================================
+                // MENSAJE
+                // =================================================
+
+                if (
+                    datos.tipo === 'middleman'
+                ) {
 
                     return channel.send({
 
                         content:
                             `📌 **Ticket reclamado por ${user}.**\n` +
-                            `👥 El ticket continúa visible para todo el Staff autorizado.`
+                            `🔒 Acceso: creador, <@&${ROLE_STAFF_TICKETS_ID}> y <@&${ROLE_MIDDLEMAN_ID}>.`
 
                     });
 
@@ -1590,8 +1612,8 @@ client.on('interactionCreate', async interaction => {
                 return channel.send({
 
                     content:
-                        `📌 **Reclamado por ${user}.**\n` +
-                        `🔒 Solo el creador y el miembro del Staff que reclamó tienen acceso.`
+                        `📌 **Ticket reclamado por ${user}.**\n` +
+                        `🔒 Acceso: creador y <@&${ROLE_STAFF_TICKETS_ID}>.`
 
                 });
 
@@ -1881,3 +1903,4 @@ client.on('interactionCreate', async interaction => {
 client.login(
     process.env.TOKEN
 );
+```
