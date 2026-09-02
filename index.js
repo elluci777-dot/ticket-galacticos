@@ -1504,11 +1504,6 @@ client.on('interactionCreate', async interaction => {
                         of ROLES_STAFF_IDS
                     ) {
 
-                        // =================================================
-                        // EL ROL STAFF 1517988091653259364
-                        // MANTIENE ACCESO AL TICKET
-                        // =================================================
-
                         if (
                             rolId ===
                             '1517988091653259364'
@@ -1653,10 +1648,6 @@ client.on('interactionCreate', async interaction => {
 
             }
 
-            // =================================================
-            // SOLO MIDDLEMAN O SUPERIOR
-            // =================================================
-
             if (!esStaff(member)) {
 
                 return interaction.reply({
@@ -1682,10 +1673,6 @@ client.on('interactionCreate', async interaction => {
                 });
 
             }
-
-            // =================================================
-            // RESEÑA OBLIGATORIA PARA MIDDLEMAN
-            // =================================================
 
             if (
                 datos.tipo === 'middleman' &&
@@ -1756,10 +1743,6 @@ client.on('interactionCreate', async interaction => {
                 });
 
             }
-
-            // =================================================
-            // VOLVER A COMPROBAR PERMISOS
-            // =================================================
 
             if (!esStaff(member)) {
 
